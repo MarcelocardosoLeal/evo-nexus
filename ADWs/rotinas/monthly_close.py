@@ -8,7 +8,7 @@ from runner import run_skill, banner, summary
 def main():
     banner("📋 Monthly Close Kickoff", "P&L • Checklist • Invoices • Pending Items Samara | @flux")
     results = []
-    results.append(run_skill("fin-monthly-close-kickoff", log_name="monthly-close", timeout=900, agent="flux-financeiro"))
+    results.append(run_skill("fin-monthly-close-kickoff", log_name="monthly-close", timeout=900, agent="flux-finance"))
     summary(results, "Monthly Close Kickoff")
 
 if __name__ == "__main__":

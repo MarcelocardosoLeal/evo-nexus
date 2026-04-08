@@ -15,7 +15,7 @@ Ler todas as fontes disponíveis sem narrar cada passo:
 
 ### 1a. Memória dos agentes
 Ler os arquivos de memória recentes de cada agente em `.claude/agent-memory/`:
-- `flux-financeiro/` — decisões financeiras do dia
+- `flux-finance/` — decisões financeiras do dia
 - `atlas-project/` — atualizações de projetos
 - `kai-personal-assistant/` — se houver algo relevante
 - Qualquer outro agente que tenha sido usado

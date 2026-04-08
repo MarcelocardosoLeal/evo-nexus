@@ -8,7 +8,7 @@ from runner import run_skill, banner, summary
 def main():
     banner("💰 Financial Pulse", "Stripe • Omie • MRR • Churn | @flux")
     results = []
-    results.append(run_skill("fin-daily-pulse", log_name="financial-pulse", timeout=600, agent="flux-financeiro"))
+    results.append(run_skill("fin-daily-pulse", log_name="financial-pulse", timeout=600, agent="flux-finance"))
     summary(results, "Financial Pulse")
 
 if __name__ == "__main__":

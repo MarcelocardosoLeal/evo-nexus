@@ -8,7 +8,7 @@ from runner import run_skill, banner, summary
 def main():
     banner("📊 Financial Weekly", "Revenue • Expenses • Cash Flow • Delinquency | @flux")
     results = []
-    results.append(run_skill("fin-weekly-report", log_name="financial-weekly", timeout=900, agent="flux-financeiro"))
+    results.append(run_skill("fin-weekly-report", log_name="financial-weekly", timeout=900, agent="flux-finance"))
     summary(results, "Financial Weekly")
 
 if __name__ == "__main__":
