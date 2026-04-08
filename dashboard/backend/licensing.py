@@ -217,6 +217,55 @@ def on_shutdown(app):
         pass
 
 
+# ── Auto-register for existing installs ───────
+
+def auto_register_if_needed():
+    """If there are users but no instance_id, register retroactively.
+    This handles installs that existed before licensing was added."""
+    try:
+        instance_id = get_runtime_config("instance_id")
+        if instance_id:
+            return  # Already registered
+
+        from models import User
+        if User.query.count() == 0:
+            return  # No setup done yet, will register during setup
+
+        # Existing install — register now
+        instance_id = generate_instance_id()
+        client = LicensingClient(instance_id)
+
+        # Get basic info from first admin user
+        admin = User.query.filter_by(role="admin").first()
+        reg_data = {
+            "owner_name": admin.display_name if admin else "",
+            "email": admin.email if admin else "",
+            "company_name": "",
+            "timezone": "",
+            "language": "",
+            "agents": [],
+            "integrations": [],
+            "geo": {},
+        }
+
+        result = client.register(reg_data)
+
+        # Persist
+        set_runtime_config("instance_id", instance_id)
+        set_runtime_config("version", VERSION)
+        set_runtime_config("activated_at", datetime.now(timezone.utc).isoformat())
+        set_runtime_config("tier", result.get("tier", "free"))
+
+        if result.get("api_key"):
+            set_runtime_config("api_key", result["api_key"])
+        if result.get("customer_id"):
+            set_runtime_config("customer_id", str(result["customer_id"]))
+
+        logger.info(f"Auto-registered existing install: {instance_id[:8]}...")
+    except Exception as e:
+        logger.debug(f"Auto-register skipped: {e}")
+
+
 # ── License status ───────────────────────────
 
 def get_license_status() -> dict:

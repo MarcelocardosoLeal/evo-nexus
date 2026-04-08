@@ -50,9 +50,12 @@ with app.app_context():
     db.session.commit()
     seed_roles()
 
-# --------------- Licensing (heartbeat + shutdown) ───
+# --------------- Licensing (auto-register + heartbeat + shutdown) ───
 import atexit
-from licensing import start_heartbeat, on_shutdown
+from licensing import start_heartbeat, on_shutdown, auto_register_if_needed
+
+with app.app_context():
+    auto_register_if_needed()
 
 start_heartbeat(app)
 atexit.register(on_shutdown, app)
