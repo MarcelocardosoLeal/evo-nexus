@@ -3,101 +3,101 @@ name: int-linear-review
 description: "Review Linear projects — check issues in review, blockers, stale items, sprint progress, and assigned tasks. Use when user says 'checa o linear', 'review do linear', 'como tá o sprint', 'issues em review', 'status dos projetos', 'o que tá travado', or any reference to checking project/issue status in Linear."
 ---
 
-# Linear Review — Checagem de Projetos
+# Linear Review — Project Check
 
-Skill para revisar o estado dos projetos no Linear: issues em review, blockers, items parados, progresso do sprint e tarefas atribuídas.
+Skill to review the state of Linear projects: issues in review, blockers, stale items, sprint progress, and assigned tasks.
 
-**Sempre responder em pt-BR.**
+**Always respond in English.**
 
-## Fluxo
+## Workflow
 
-Executar os passos abaixo silenciosamente e apresentar relatório consolidado no final.
+Execute the steps below silently and present a consolidated report at the end.
 
-### Passo 1 — Levantar contexto
+### Step 1 — Gather context
 
-Usar as tools do Linear MCP para coletar dados:
+Use the Linear MCP tools to collect data:
 
-1. **Issues em Review** — listar issues com estado "In Review" ou "Review":
+1. **Issues in Review** — list issues with state "In Review" or "Review":
    ```
    list_issues(state="In Review")
    ```
 
-2. **Issues do usuário** — listar issues atribuídas ao usuário:
+2. **User's issues** — list issues assigned to the user:
    ```
    list_issues(assignee="me")
    ```
 
-3. **Blockers** — listar issues com prioridade Urgent (1) ou High (2):
+3. **Blockers** — list issues with Urgent (1) or High (2) priority:
    ```
    list_issues(priority=1)
    list_issues(priority=2)
    ```
 
-4. **Issues paradas** — listar issues "In Progress" que não foram atualizadas nos últimos 3 dias:
+4. **Stale issues** — list "In Progress" issues not updated in the last 3 days:
    ```
    list_issues(state="In Progress", updatedAt="-P3D")
    ```
-   Comparar: se a issue está em "In Progress" mas não foi atualizada há mais de 3 dias, marcar como stale.
+   Compare: if the issue is "In Progress" but hasn't been updated in more than 3 days, mark as stale.
 
-5. **Ciclo atual** — verificar progresso do sprint/ciclo ativo:
+5. **Current cycle** — check active sprint/cycle progress:
    ```
    list_cycles(teamId="...", type="current")
    ```
 
-### Passo 2 — Analisar
+### Step 2 — Analyze
 
-Para cada grupo, identificar:
-- **Em Review:** quem precisa revisar, há quanto tempo está pendente
-- **Blockers:** o que está travando e quem é responsável
-- **Stale:** issues paradas sem atividade — precisam de atenção ou repriorização
-- **Minhas:** o que o usuário precisa fazer primeiro (por prioridade)
+For each group, identify:
+- **In Review:** who needs to review, how long it has been pending
+- **Blockers:** what is blocking and who is responsible
+- **Stale:** issues stagnant without activity — need attention or re-prioritization
+- **My issues:** what the user needs to do first (by priority)
 
-### Passo 3 — Relatório
+### Step 3 — Report
 
-Apresentar no formato:
+Present in the format:
 
 ```
 ## Linear Review — {data}
 
-### Em Review ({N})
-| Issue | Título | Responsável | Dias em review |
+### In Review ({N})
+| Issue | Title | Assignee | Days in review |
 |-------|--------|-------------|----------------|
 
 ### Blockers ({N})
-| Issue | Título | Prioridade | Responsável | Descrição do bloqueio |
+| Issue | Title | Priority | Assignee | Block description |
 |-------|--------|------------|-------------|----------------------|
 
-### Stale — Paradas >3 dias ({N})
-| Issue | Título | Responsável | Última atualização |
+### Stale — Inactive >3 days ({N})
+| Issue | Title | Assignee | Last updated |
 |-------|--------|-------------|-------------------|
 
-### Minhas Issues ({N})
-| Issue | Título | Status | Prioridade |
+### My Issues ({N})
+| Issue | Title | Status | Priority |
 |-------|--------|--------|------------|
 
-### Sprint/Ciclo Atual
-- Progresso: {X}% ({concluídas}/{total})
-- Prazo: {data fim}
-- Risco: {alto/médio/baixo}
+### Current Sprint/Cycle
+- Progress: {X}% ({completed}/{total})
+- Deadline: {end date}
+- Risk: {high/medium/low}
 ```
 
-### Passo 4 — Salvar artefato HTML
+### Step 4 — Save HTML artifact
 
-Ler o template em `.claude/templates/html/linear-review.html`, preencher todos os `{{PLACEHOLDER}}` com os dados coletados nos passos anteriores e salvar o HTML completo em `02 Projects/linear-reviews/[C] YYYY-MM-DD-linear-review.html`.
+Read the template at `.claude/templates/html/linear-review.html`, fill all `{{PLACEHOLDER}}` with the data collected in previous steps, and save the complete HTML to `02 Projects/linear-reviews/[C] YYYY-MM-DD-linear-review.html`.
 
-Criar o diretório `02 Projects/linear-reviews/` se não existir.
+Create the directory `02 Projects/linear-reviews/` if it does not exist.
 
-## Regras
+## Rules
 
-- **Não alterar issues** — apenas ler e reportar. Mudanças só com aprovação do usuário
-- **Priorizar clareza** — se não conseguir determinar o time ou ciclo, listar o que encontrar sem travar
-- **Destacar riscos** — issues em review há mais de 2 dias ou stale são sinais de atenção
-- **Ser direto** — números, não narrativa
+- **Do not modify issues** — only read and report. Changes only with user approval
+- **Prioritize clarity** — if unable to determine the team or cycle, list what you find without blocking
+- **Highlight risks** — issues in review for more than 2 days or stale are warning signs
+- **Be direct** — numbers, not narrative
 
 
-### Notificar no Telegram
+### Notify via Telegram
 
-Ao finalizar, enviar resumo curto no Telegram para o usuário:
-- Usar o MCP do Telegram: `reply(chat_id="YOUR_CHAT_ID", text="...")`
-- Formato: emoji + nome da rotina + resultado principal (1-3 linhas)
-- Se a rotina não teve novidades, enviar mesmo assim com "sem novidades"
+Upon completion, send a short summary via Telegram to the user:
+- Use the Telegram MCP: `reply(chat_id="YOUR_CHAT_ID", text="...")`
+- Format: emoji + routine name + main result (1-3 lines)
+- If the routine had no updates, send anyway with "no updates"

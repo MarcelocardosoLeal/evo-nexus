@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -94,7 +94,7 @@
 <div class="header">
   <div class="header-left">
     <h1><span>Financial</span> Weekly</h1>
-    <div class="subtitle">Semana {{SEMANA}} — {{PERIODO}} — Relatório semanal</div>
+    <div class="subtitle">Semana {{SEMANA}} — {{PERIODO}} — Weekly report</div>
   </div>
   <div class="header-right">
     <span class="badge {{SAUDE_FINANCEIRA_CLASS}}">{{SAUDE_FINANCEIRA}}</span>
@@ -104,55 +104,55 @@
 <div class="container">
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- KPIs DA SEMANA                                 -->
+  <!-- WEEK KPIs                                 -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="grid-4">
     <div class="metric-card">
-      <div class="label">Receita da Semana</div>
+      <div class="label">Weekly Revenue</div>
       <div class="value">{{RECEITA_SEMANA}}</div>
-      <div class="delta {{RECEITA_DELTA_CLASS}}">{{RECEITA_DELTA}} vs semana anterior</div>
+      <div class="delta {{RECEITA_DELTA_CLASS}}">{{RECEITA_DELTA}} vs previous week</div>
     </div>
     <div class="metric-card">
-      <div class="label">Despesas da Semana</div>
+      <div class="label">Weekly Expenses</div>
       <div class="value">{{DESPESAS_SEMANA}}</div>
-      <div class="delta {{DESPESAS_DELTA_CLASS}}">{{DESPESAS_DELTA}} vs semana anterior</div>
+      <div class="delta {{DESPESAS_DELTA_CLASS}}">{{DESPESAS_DELTA}} vs previous week</div>
     </div>
     <div class="metric-card">
-      <div class="label">MRR Atual</div>
+      <div class="label">Current MRR</div>
       <div class="value">{{MRR_VALOR}}</div>
-      <div class="delta {{MRR_DELTA_CLASS}}">{{MRR_DELTA}} vs mês anterior</div>
+      <div class="delta {{MRR_DELTA_CLASS}}">{{MRR_DELTA}} vs previous month</div>
     </div>
     <div class="metric-card">
-      <div class="label">Saldo Projetado (30d)</div>
+      <div class="label">Projected Balance (30d)</div>
       <div class="value">{{SALDO_PROJETADO}}</div>
       <div class="delta {{SALDO_DELTA_CLASS}}">{{SALDO_DELTA}}</div>
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- RECEITAS DA SEMANA                             -->
+  <!-- WEEKLY REVENUE                             -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Receitas</h2>
+      <h2>Revenue</h2>
       <span class="badge green">{{RECEITA_SEMANA}}</span>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Categoria</th>
-            <th class="right">Valor</th>
-            <th class="right">% do Total</th>
-            <th class="right">vs Semana Ant.</th>
+            <th>Category</th>
+            <th class="right">Amount</th>
+            <th class="right">% of Total</th>
+            <th class="right">vs Prev. Week</th>
           </tr>
         </thead>
         <tbody>
-          <!-- TEMPLATE: repetir para cada categoria de receita -->
+          <!-- TEMPLATE: repeat for each revenue category -->
           {{RECEITAS_ROWS}}
           <!-- /TEMPLATE -->
           <tr class="total">
-            <td>Total Receitas</td>
+            <td>Total Revenue</td>
             <td class="right">{{RECEITA_SEMANA}}</td>
             <td class="right">100%</td>
             <td class="right {{RECEITA_VAR_CLASS}}">{{RECEITA_VAR}}</td>
@@ -163,29 +163,29 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- DESPESAS DA SEMANA                             -->
+  <!-- WEEKLY EXPENSES                             -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Despesas</h2>
+      <h2>Expenses</h2>
       <span class="badge red">{{DESPESAS_SEMANA}}</span>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Categoria</th>
-            <th class="right">Valor</th>
-            <th class="right">% do Total</th>
-            <th class="right">vs Semana Ant.</th>
+            <th>Category</th>
+            <th class="right">Amount</th>
+            <th class="right">% of Total</th>
+            <th class="right">vs Prev. Week</th>
           </tr>
         </thead>
         <tbody>
-          <!-- TEMPLATE: repetir para cada categoria de despesa -->
+          <!-- TEMPLATE: repeat for each expense category -->
           {{DESPESAS_ROWS}}
           <!-- /TEMPLATE -->
           <tr class="total">
-            <td>Total Despesas</td>
+            <td>Total Expenses</td>
             <td class="right">{{DESPESAS_SEMANA}}</td>
             <td class="right">100%</td>
             <td class="right {{DESPESAS_VAR_CLASS}}">{{DESPESAS_VAR}}</td>
@@ -213,7 +213,7 @@
           </div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{ASSINATURAS_DOT}}"></span>Assinaturas</div>
+          <div class="mr-label"><span class="status-dot {{ASSINATURAS_DOT}}"></span>Subscriptions</div>
           <div>
             <div class="mr-value">{{STRIPE_ASSINATURAS}}</div>
             <div style="font-size:12px;color:var(--text-muted);text-align:right;">{{STRIPE_ASSINATURAS_VAR}}</div>
@@ -224,11 +224,11 @@
           <div class="mr-value">{{STRIPE_CHURN}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{NOVOS_DOT}}"></span>Novos clientes</div>
+          <div class="mr-label"><span class="status-dot {{NOVOS_DOT}}"></span>New customers</div>
           <div class="mr-value">{{STRIPE_NOVOS}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{FALHAS_DOT}}"></span>Falhas pagamento</div>
+          <div class="mr-label"><span class="status-dot {{FALHAS_DOT}}"></span>Payment failures</div>
           <div class="mr-value">{{STRIPE_FALHAS}}</div>
         </div>
       </div>
@@ -241,23 +241,23 @@
       </div>
       <div class="section-body">
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{RECEBER_DOT}}"></span>A receber vencidas</div>
+          <div class="mr-label"><span class="status-dot {{RECEBER_DOT}}"></span>Overdue receivables</div>
           <div class="mr-value">{{OMIE_VENCIDAS}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{PAGAR_DOT}}"></span>A pagar (próx. semana)</div>
+          <div class="mr-label"><span class="status-dot {{PAGAR_DOT}}"></span>Payables (next week)</div>
           <div class="mr-value">{{OMIE_A_PAGAR}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{NF_DOT}}"></span>NFs pendentes</div>
+          <div class="mr-label"><span class="status-dot {{NF_DOT}}"></span>Pending invoices</div>
           <div class="mr-value">{{OMIE_NFS_PENDENTES}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot green"></span>NFs emitidas (semana)</div>
+          <div class="mr-label"><span class="status-dot green"></span>Invoices issued (week)</div>
           <div class="mr-value">{{OMIE_NFS_EMITIDAS}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot green"></span>Recebidos (semana)</div>
+          <div class="mr-label"><span class="status-dot green"></span>Received (week)</div>
           <div class="mr-value">{{OMIE_RECEBIDOS}}</div>
         </div>
       </div>
@@ -265,25 +265,25 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- FLUXO DE CAIXA — PRÓXIMAS 4 SEMANAS            -->
+  <!-- CASH FLOW — NEXT 4 WEEKS            -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Projeção de Fluxo de Caixa (4 semanas)</h2>
+      <h2>Cash Flow Projection (4 weeks)</h2>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Semana</th>
-            <th class="right">Entradas</th>
-            <th class="right">Saídas</th>
-            <th class="right">Saldo</th>
-            <th class="right">Acumulado</th>
+            <th>Week</th>
+            <th class="right">Inflows</th>
+            <th class="right">Outflows</th>
+            <th class="right">Balance</th>
+            <th class="right">Accumulated</th>
           </tr>
         </thead>
         <tbody>
-          <!-- TEMPLATE: repetir para cada semana projetada -->
+          <!-- TEMPLATE: repeat for each projected week -->
           {{FLUXO_CAIXA_ROWS}}
           <!-- /TEMPLATE -->
         </tbody>
@@ -292,26 +292,26 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- INADIMPLÊNCIA / CONTAS VENCIDAS                -->
+  <!-- DELINQUENCY / OVERDUE ACCOUNTS                -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Contas Vencidas</h2>
+      <h2>Overdue Accounts</h2>
       <span class="count">{{VENCIDAS_COUNT}}</span>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Cliente / Fornecedor</th>
-            <th>Tipo</th>
-            <th class="right">Valor</th>
-            <th>Vencimento</th>
-            <th>Dias Atraso</th>
+            <th>Client / Supplier</th>
+            <th>Type</th>
+            <th class="right">Amount</th>
+            <th>Due Date</th>
+            <th>Days Overdue</th>
           </tr>
         </thead>
         <tbody>
-          <!-- TEMPLATE: repetir para cada conta vencida -->
+          <!-- TEMPLATE: repeat for each overdue account -->
           {{VENCIDAS_ROWS}}
           <!-- /TEMPLATE -->
         </tbody>
@@ -320,15 +320,15 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- ANÁLISE & RECOMENDAÇÕES                        -->
+  <!-- ANALYSIS & RECOMMENDATIONS                        -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="highlight-card">
-    <div class="title">Análise da Semana</div>
+    <div class="title">Week Analysis</div>
     <div class="body">{{ANALISE_SEMANA}}</div>
   </div>
 
   <div class="highlight-card">
-    <div class="title">Ações Recomendadas</div>
+    <div class="title">Recommended Actions</div>
     <div class="body">{{ACOES_RECOMENDADAS}}</div>
   </div>
 
@@ -336,7 +336,7 @@
 
 <!-- FOOTER -->
 <div class="footer">
-  Gerado automaticamente por <span>Evolution Foundation</span> — Agente Flux — {{TIMESTAMP}}
+  Automatically generated by <span>Evolution Foundation</span> — Agent Flux — {{TIMESTAMP}}
 </div>
 
 </body>

@@ -94,9 +94,9 @@ Relatório salvo em 03 Comunidade/reports/daily/
 - **Canais vazios = OK** — se um canal não teve atividade, não reportar como problema
 
 
-### Notificar no Telegram
+### Notify via Telegram
 
-Ao finalizar, enviar resumo curto no Telegram para o usuário:
-- Usar o MCP do Telegram: `reply(chat_id="YOUR_CHAT_ID", text="...")`
-- Formato: emoji + nome da rotina + resultado principal (1-3 linhas)
-- Se a rotina não teve novidades, enviar mesmo assim com "sem novidades"
+Upon completion, send a short summary via Telegram to the user:
+- Use the Telegram MCP: `reply(chat_id="YOUR_CHAT_ID", text="...")`
+- Format: emoji + routine name + main result (1-3 lines)
+- If the routine had no updates, send anyway with "no updates"

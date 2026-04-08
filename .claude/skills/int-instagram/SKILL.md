@@ -5,11 +5,11 @@ description: "Query Instagram Graph API — profile stats, recent posts, engagem
 
 # Instagram Graph API
 
-Integração com Instagram para monitorar perfis da empresa e do usuário. Suporta múltiplas contas via OAuth (Social Auth App).
+Instagram integration to monitor company and user profiles. Supports multiple accounts via OAuth (Social Auth App).
 
 ## Setup
 
-Contas configuradas via `make social-auth` (OAuth login com Facebook). Salva no `.env`:
+Accounts configured via `make social-auth` (OAuth login with Facebook). Saved in `.env`:
 ```env
 SOCIAL_INSTAGRAM_1_LABEL=your_account
 SOCIAL_INSTAGRAM_1_ACCESS_TOKEN=YOUR_TOKEN
@@ -23,39 +23,39 @@ SOCIAL_INSTAGRAM_1_PAGE_TOKEN=YOUR_PAGE_TOKEN
 python3 {project-root}/.claude/skills/int-instagram/scripts/instagram_client.py <command> [args]
 ```
 
-### Comandos
+### Commands
 
 ```bash
-# Listar contas configuradas
+# List configured accounts
 instagram_client.py accounts
 
-# Perfil (seguidores, bio, media count)
+# Profile (followers, bio, media count)
 instagram_client.py profile [account_label]
 
-# Últimos N posts com engagement
+# Last N posts with engagement
 instagram_client.py recent_posts [account] [N]
 
-# Top N posts por engagement
+# Top N posts by engagement
 instagram_client.py top_posts [account] [N]
 
-# Insights de um post específico
+# Insights for a specific post
 instagram_client.py post_insights POST_ID [account]
 
-# Insights da conta (impressões, alcance, profile views — 30d)
+# Account insights (impressions, reach, profile views — 30d)
 instagram_client.py account_insights [account]
 
-# Resumo de todas as contas
+# Summary of all accounts
 instagram_client.py summary
 ```
 
-## Métricas-chave
-- Seguidores (delta via snapshots diários)
+## Key metrics
+- Followers (delta via daily snapshots)
 - Engagement rate: (likes + comments) / followers
-- Alcance e impressões (via account insights)
+- Reach and impressions (via account insights)
 - Profile views
-- Melhor post do período
-- Reels vs posts estáticos
-- Frequência de publicação
+- Best post of the period
+- Reels vs static posts
+- Publishing frequency
 
 ## Rate Limits
 - Endpoints Instagram Platform: `4800 × impressões` por 24h

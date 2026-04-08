@@ -4,30 +4,30 @@ type: daily
 date: {{YYYY-MM-DD}}
 ---
 
-# Session Log — {{Dia da semana}}, {{DD}} de {{Mês}} de {{YYYY}}
+# Session Log — {{Weekday}}, {{Month}} {{DD}}, {{YYYY}}
 
-## O que foi feito
-- {{projeto/área — o que foi feito}}
+## What Was Done
+- {{project/area — what was done}}
 
 ## Git Changes
-- {{N}} commits hoje
-- {{N}} arquivos modificados
-- {{N}} arquivos criados
-- {{lista dos principais arquivos alterados}}
+- {{N}} commits today
+- {{N}} files modified
+- {{N}} files created
+- {{list of main files changed}}
 
-## Rotinas ADW executadas
-| Rotina | Status | Duração |
-|--------|--------|---------|
-| {{rotina}} | {{ok/falha}} | {{Ns}} |
+## ADW Routines Executed
+| Routine | Status | Duration |
+|---------|--------|----------|
+| {{routine}} | {{ok/fail}} | {{Ns}} |
 
-## Reuniões
-- {{reunião — resumo curto}}
+## Meetings
+- {{meeting — short summary}}
 
-## Arquivos criados ou alterados
-- {{arquivo ou decisão}}
+## Files Created or Changed
+- {{file or decision}}
 
-## Pendências
-- {{coisa que ficou em aberto}}
+## Pending Items
+- {{things left open}}
 
-## Começar aqui amanhã
-{{1-2 frases sobre o melhor ponto para retomar}}
+## Start Here Tomorrow
+{{1-2 sentences about the best point to resume}}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -83,7 +83,7 @@
 <div class="header">
   <div class="header-left">
     <h1><span>Financial</span> Pulse</h1>
-    <div class="subtitle">{{DATA_EXTENSO}} — Snapshot diário</div>
+    <div class="subtitle">{{DATA_EXTENSO}} — Daily snapshot</div>
   </div>
   <div class="header-right">
     <span class="badge {{SAUDE_FINANCEIRA_CLASS}}">{{SAUDE_FINANCEIRA}}</span>
@@ -93,7 +93,7 @@
 <div class="container">
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- KPIs PRINCIPAIS                                -->
+  <!-- MAIN KPIs                                -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="grid-4">
     <div class="metric-card">
@@ -102,12 +102,12 @@
       <div class="delta {{MRR_DELTA_CLASS}}">{{MRR_DELTA}}</div>
     </div>
     <div class="metric-card">
-      <div class="label">Assinaturas Ativas</div>
+      <div class="label">Active Subscriptions</div>
       <div class="value">{{ASSINATURAS_ATIVAS}}</div>
       <div class="delta {{ASSINATURAS_DELTA_CLASS}}">{{ASSINATURAS_DELTA}}</div>
     </div>
     <div class="metric-card">
-      <div class="label">Receita Hoje</div>
+      <div class="label">Revenue Today</div>
       <div class="value">{{RECEITA_HOJE}}</div>
       <div class="delta {{RECEITA_DELTA_CLASS}}">{{RECEITA_DELTA}}</div>
     </div>
@@ -126,23 +126,23 @@
     <div class="section">
       <div class="section-header">
         <h2>Stripe</h2>
-        <span class="count">{{STRIPE_CHARGES_HOJE}} charges hoje</span>
+        <span class="count">{{STRIPE_CHARGES_HOJE}} charges today</span>
       </div>
       <div class="section-body">
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{COBRADOS_DOT}}"></span>Cobrados (hoje)</div>
+          <div class="mr-label"><span class="status-dot {{COBRADOS_DOT}}"></span>Charged (today)</div>
           <div class="mr-value">{{STRIPE_COBRADOS_HOJE}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{FALHAS_DOT}}"></span>Falhas de pagamento</div>
+          <div class="mr-label"><span class="status-dot {{FALHAS_DOT}}"></span>Payment failures</div>
           <div class="mr-value">{{STRIPE_FALHAS}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{REEMBOLSOS_DOT}}"></span>Reembolsos (7d)</div>
+          <div class="mr-label"><span class="status-dot {{REEMBOLSOS_DOT}}"></span>Refunds (7d)</div>
           <div class="mr-value">{{STRIPE_REEMBOLSOS}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{NOVOS_DOT}}"></span>Novos clientes (7d)</div>
+          <div class="mr-label"><span class="status-dot {{NOVOS_DOT}}"></span>New customers (7d)</div>
           <div class="mr-value">{{STRIPE_NOVOS_CLIENTES}}</div>
         </div>
       </div>
@@ -152,23 +152,23 @@
     <div class="section">
       <div class="section-header">
         <h2>Omie (ERP)</h2>
-        <span class="count">{{OMIE_PENDENCIAS}} pendências</span>
+        <span class="count">{{OMIE_PENDENCIAS}} pending items</span>
       </div>
       <div class="section-body">
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{RECEBER_DOT}}"></span>A receber (vencidas)</div>
+          <div class="mr-label"><span class="status-dot {{RECEBER_DOT}}"></span>Receivables (overdue)</div>
           <div class="mr-value">{{OMIE_A_RECEBER}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{PAGAR_DOT}}"></span>A pagar (próx. 7d)</div>
+          <div class="mr-label"><span class="status-dot {{PAGAR_DOT}}"></span>Payables (next 7d)</div>
           <div class="mr-value">{{OMIE_A_PAGAR}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{NF_DOT}}"></span>NFs pendentes emissão</div>
+          <div class="mr-label"><span class="status-dot {{NF_DOT}}"></span>Pending invoice issuance</div>
           <div class="mr-value">{{OMIE_NFS_PENDENTES}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot green"></span>NFs emitidas (mês)</div>
+          <div class="mr-label"><span class="status-dot green"></span>Invoices issued (month)</div>
           <div class="mr-value">{{OMIE_NFS_EMITIDAS}}</div>
         </div>
       </div>
@@ -176,25 +176,25 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- MOVIMENTAÇÕES DO DIA                           -->
+  <!-- TRANSACTIONS OF THE DAY                           -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Movimentações do Dia</h2>
+      <h2>Transactions of the Day</h2>
       <span class="count">{{MOVIMENTACOES_COUNT}}</span>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Tipo</th>
-            <th>Descrição</th>
-            <th>Valor</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Amount</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
-          <!-- TEMPLATE: repetir para cada movimentação -->
+          <!-- TEMPLATE: repeat for each transaction -->
           {{MOVIMENTACOES_ROWS}}
           <!-- /TEMPLATE -->
         </tbody>
@@ -206,7 +206,7 @@
   <!-- ALERTAS                                        -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="highlight-card">
-    <div class="title">Alertas Financeiros</div>
+    <div class="title">Financial Alerts</div>
     <div class="body">{{ALERTAS_FINANCEIROS}}</div>
   </div>
 
@@ -214,7 +214,7 @@
 
 <!-- FOOTER -->
 <div class="footer">
-  Gerado automaticamente por <span>Evolution Foundation</span> — Agente Flux — {{TIMESTAMP}}
+  Automatically generated by <span>Evolution Foundation</span> — Agent Flux — {{TIMESTAMP}}
 </div>
 
 </body>

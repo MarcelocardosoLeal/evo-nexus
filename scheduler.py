@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Evolution Workspace Scheduler
-Serviço que executa as rotinas automatizadas nos horários definidos.
-Uso: make scheduler (ou python scheduler.py)
+Service that runs automated routines at defined times.
+Usage: make scheduler (or python scheduler.py)
 """
 
 import subprocess
@@ -35,7 +35,7 @@ ADW_DIR = WORKSPACE / "ADWs" / "rotinas"
 
 
 def run_adw(name: str, script: str):
-    """Executa um ADW como subprocess."""
+    """Execute an ADW as a subprocess."""
     now = datetime.now().strftime("%H:%M")
     console.print(f"  [info]{now}[/info] [success]▶[/success] {name}")
 
@@ -50,24 +50,24 @@ def run_adw(name: str, script: str):
         )
 
         if result.returncode == 0:
-            console.print(f"  [info]{now}[/info] [success]✓[/success] {name} concluído")
+            console.print(f"  [info]{now}[/info] [success]✓[/success] {name} completed")
         else:
-            console.print(f"  [info]{now}[/info] [error]✗[/error] {name} falhou (exit {result.returncode})")
+            console.print(f"  [info]{now}[/info] [error]✗[/error] {name} failed (exit {result.returncode})")
 
     except subprocess.TimeoutExpired:
         console.print(f"  [info]{now}[/info] [error]✗[/error] {name} timeout (15min)")
     except Exception as e:
-        console.print(f"  [info]{now}[/info] [error]✗[/error] {name} erro: {e}")
+        console.print(f"  [info]{now}[/info] [error]✗[/error] {name} error: {e}")
 
 
 # ============================================================
-# Definição das rotinas
+# Routine definitions
 # ============================================================
 
 def setup_schedule():
-    """Configura todas as rotinas com seus horários."""
+    """Configure all routines with their schedules."""
 
-    # --- Diárias ---
+    # --- Daily ---
     schedule.every().day.at("06:50").do(run_adw, "Review Todoist", "review_todoist.py")
     schedule.every().day.at("07:00").do(run_adw, "Good Morning", "good_morning.py")
     schedule.every().day.at("07:15").do(run_adw, "Email Triage", "email_triage.py")
@@ -81,7 +81,7 @@ def setup_schedule():
     schedule.every().day.at("19:00").do(run_adw, "Financial Pulse", "financial_pulse.py")
     schedule.every().day.at("21:30").do(run_adw, "Dashboard Consolidado", "dashboard.py")
 
-    # --- Semanais ---
+    # --- Weekly ---
     schedule.every().friday.at("08:00").do(run_adw, "Weekly Review", "weekly_review.py")
     schedule.every().friday.at("08:30").do(run_adw, "Trends", "trends.py")
     schedule.every().friday.at("09:00").do(run_adw, "Strategy Digest", "strategy_digest.py")
@@ -97,16 +97,16 @@ def setup_schedule():
     schedule.every().friday.at("08:15").do(run_adw, "Social Analytics Weekly", "social_analytics.py")
     schedule.every().sunday.at("10:00").do(run_adw, "Health Check-in", "health_checkin.py")
 
-    # --- Mensais (dia 1) ---
-    # Monthly close e community monthly rodam via check no loop principal (ver abaixo)
+    # --- Monthly (day 1) ---
+    # Monthly close and community monthly run via check in the main loop (see below)
 
 
 def show_schedule():
-    """Mostra tabela de rotinas agendadas."""
-    table = Table(title="Rotinas Agendadas", border_style="cyan", show_lines=False)
-    table.add_column("Próxima execução", style="cyan", width=20)
-    table.add_column("Rotina", style="bold white")
-    table.add_column("Intervalo", style="dim")
+    """Show table of scheduled routines."""
+    table = Table(title="Scheduled Routines", border_style="cyan", show_lines=False)
+    table.add_column("Next execution", style="cyan", width=20)
+    table.add_column("Routine", style="bold white")
+    table.add_column("Interval", style="dim")
 
     jobs = sorted(schedule.get_jobs(), key=lambda j: j.next_run)
     for job in jobs:
@@ -119,11 +119,11 @@ def show_schedule():
 
 
 def main():
-    """Entry point do scheduler."""
+    """Entry point for the scheduler."""
     console.print(Panel(
         "[bold white]Evolution Workspace Scheduler[/bold white]\n"
-        "[dim]Executando rotinas automatizadas • Ctrl+C para parar[/dim]\n"
-        "[dim]Notificações via MCP Telegram (dentro das skills)[/dim]",
+        "[dim]Running automated routines • Ctrl+C to stop[/dim]\n"
+        "[dim]Notifications via MCP Telegram (inside skills)[/dim]",
         border_style="cyan",
         padding=(0, 2)
     ))
@@ -132,25 +132,25 @@ def main():
     show_schedule()
 
     total = len(schedule.get_jobs())
-    console.print(f"\n  [success]✓[/success] {total} rotinas agendadas")
+    console.print(f"\n  [success]✓[/success] {total} routines scheduled")
     console.print(f"  [dim]Timezone: BRT (UTC-3) • Logs: ADWs/logs/[/dim]\n")
 
     # Graceful shutdown
     def shutdown(sig, frame):
-        console.print(f"\n  [warning]⚠ Scheduler encerrado[/warning]")
+        console.print(f"\n  [warning]⚠ Scheduler stopped[/warning]")
         sys.exit(0)
 
     signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGTERM, shutdown)
 
-    # Controle de rotinas mensais
+    # Monthly routine control
     monthly_close_ran = False
 
-    # Loop principal
+    # Main loop
     while True:
         schedule.run_pending()
 
-        # Rotinas mensais — rodam no dia 1
+        # Monthly routines — run on day 1
         now = datetime.now()
         if now.day == 1 and now.hour == 8 and not monthly_close_ran:
             run_adw("Monthly Close Kickoff", "monthly_close.py")

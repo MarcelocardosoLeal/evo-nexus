@@ -4,35 +4,35 @@ type: morning-briefing
 date: {{YYYY-MM-DD}}
 ---
 
-# Briefing — {{Dia da semana}}, {{DD}} de {{Mês}} de {{YYYY}}
+# Briefing — {{Weekday}}, {{Month}} {{DD}}, {{YYYY}}
 
-## Agenda de hoje
+## Today's Agenda
 
-| Horário | Evento | Participantes |
-|---------|--------|---------------|
-| {{horário}} | {{evento}} | {{pessoas}} |
+| Time | Event | Participants |
+|------|-------|--------------|
+| {{time}} | {{event}} | {{people}} |
 
-**Blocos livres:** {{blocos disponíveis}}
+**Free blocks:** {{available blocks}}
 
-## Emails que pedem atenção
+## Emails Requiring Attention
 
-| Prioridade | De | Assunto |
-|---|---|---|
-| {{Alta/Média/Baixa}} | {{remetente}} | {{assunto}} |
+| Priority | From | Subject |
+|----------|------|---------|
+| {{High/Medium/Low}} | {{sender}} | {{subject}} |
 
-## Meetings sincronizadas (ontem)
+## Synced Meetings (Yesterday)
 
-{{N}} reuniões processadas, {{T}} tarefas criadas no Todoist.
-_(ou "Nenhuma reunião nova para sincronizar")_
+{{N}} meetings processed, {{T}} tasks created in Todoist.
+_(or "No new meetings to sync")_
 
-## Tarefas de hoje
+## Today's Tasks
 
-- {{tarefa 1}}
-- {{tarefa 2}}
-- {{tarefa 3}}
+- {{task 1}}
+- {{task 2}}
+- {{task 3}}
 
-**Total:** {{N}} tarefas para hoje | {{M}} atrasadas
+**Total:** {{N}} tasks for today | {{M}} overdue
 
-## Recomendação
+## Recommendation
 
-{{Uma frase direta sobre o que atacar primeiro}}
+{{One direct sentence about what to tackle first}}

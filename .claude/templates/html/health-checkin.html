@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -89,14 +89,14 @@
 <!-- CONTENT -->
 <div class="container">
 
-  <!-- MÉTRICAS COM SEMÁFORO -->
+  <!-- METRICS WITH TRAFFIC LIGHT -->
   <div class="section">
     <div class="section-header">
-      <h2>Métricas de Saúde</h2>
-      <span style="font-size:13px;color:var(--text-muted);">Semáforo: <span style="color:var(--green);">&#9679;</span> bom &nbsp;<span style="color:var(--yellow);">&#9679;</span> atenção &nbsp;<span style="color:var(--red);">&#9679;</span> crítico</span>
+      <h2>Health Metrics</h2>
+      <span style="font-size:13px;color:var(--text-muted);">Semáforo: <span style="color:var(--green);">&#9679;</span> good &nbsp;<span style="color:var(--yellow);">&#9679;</span> warning &nbsp;<span style="color:var(--red);">&#9679;</span> critical</span>
     </div>
     <div class="section-body">
-      <!-- TEMPLATE: repetir para cada métrica -->
+      <!-- TEMPLATE: repeat for each metric -->
       <div class="metric-row">
         <div class="mr-label">
           <span class="status-dot {{METRICA_STATUS}}"></span>
@@ -109,7 +109,7 @@
       </div>
       <!-- Peso -->
       <div class="metric-row">
-        <div class="mr-label"><span class="status-dot {{PESO_STATUS}}"></span>Peso</div>
+        <div class="mr-label"><span class="status-dot {{PESO_STATUS}}"></span>Weight</div>
         <div class="mr-right">
           <span class="mr-value">{{PESO_VALOR}}</span>
           <span class="mr-trend {{PESO_TREND}}">{{PESO_TREND_LABEL}}</span>
@@ -117,7 +117,7 @@
       </div>
       <!-- Alimentação -->
       <div class="metric-row">
-        <div class="mr-label"><span class="status-dot {{ALIMENTACAO_STATUS}}"></span>Alimentação</div>
+        <div class="mr-label"><span class="status-dot {{ALIMENTACAO_STATUS}}"></span>Nutrition</div>
         <div class="mr-right">
           <span class="mr-value">{{ALIMENTACAO_NOTA}}/10</span>
           <span class="mr-trend {{ALIMENTACAO_TREND}}">{{ALIMENTACAO_TREND_LABEL}}</span>
@@ -125,23 +125,23 @@
       </div>
       <!-- Treino -->
       <div class="metric-row">
-        <div class="mr-label"><span class="status-dot {{TREINO_STATUS}}"></span>Treino</div>
+        <div class="mr-label"><span class="status-dot {{TREINO_STATUS}}"></span>Exercise</div>
         <div class="mr-right">
-          <span class="mr-value">{{TREINO_DIAS}}x esta semana</span>
+          <span class="mr-value">{{TREINO_DIAS}}x this week</span>
           <span class="mr-trend {{TREINO_TREND}}">{{TREINO_TREND_LABEL}}</span>
         </div>
       </div>
       <!-- Hidratação -->
       <div class="metric-row">
-        <div class="mr-label"><span class="status-dot {{HIDRATACAO_STATUS}}"></span>Hidratação</div>
+        <div class="mr-label"><span class="status-dot {{HIDRATACAO_STATUS}}"></span>Hydration</div>
         <div class="mr-right">
-          <span class="mr-value">{{HIDRATACAO_LITROS}}L/dia (est.)</span>
+          <span class="mr-value">{{HIDRATACAO_LITROS}}L/day (est.)</span>
           <span class="mr-trend {{HIDRATACAO_TREND}}">{{HIDRATACAO_TREND_LABEL}}</span>
         </div>
       </div>
       <!-- Sono -->
       <div class="metric-row">
-        <div class="mr-label"><span class="status-dot {{SONO_STATUS}}"></span>Sono</div>
+        <div class="mr-label"><span class="status-dot {{SONO_STATUS}}"></span>Sleep</div>
         <div class="mr-right">
           <span class="mr-value">{{SONO_NOTA}}/10</span>
           <span class="mr-trend {{SONO_TREND}}">{{SONO_TREND_LABEL}}</span>
@@ -149,7 +149,7 @@
       </div>
       <!-- Energia -->
       <div class="metric-row">
-        <div class="mr-label"><span class="status-dot {{ENERGIA_STATUS}}"></span>Energia / Disposição</div>
+        <div class="mr-label"><span class="status-dot {{ENERGIA_STATUS}}"></span>Energy / Mood</div>
         <div class="mr-right">
           <span class="mr-value">{{ENERGIA_NOTA}}/10</span>
           <span class="mr-trend {{ENERGIA_TREND}}">{{ENERGIA_TREND_LABEL}}</span>
@@ -169,21 +169,21 @@
   <!-- COMPARATIVO -->
   <div class="section">
     <div class="section-header">
-      <h2>Comparativo com Último Check-in</h2>
+      <h2>Comparison with Last Check-in</h2>
       <span style="font-size:13px;color:var(--text-muted);">{{ULTIMO_CHECKIN_DATA}}</span>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Métrica</th>
-            <th>Antes</th>
-            <th>Agora</th>
-            <th>Variação</th>
+            <th>Metric</th>
+            <th>Before</th>
+            <th>Now</th>
+            <th>Change</th>
           </tr>
         </thead>
         <tbody>
-          <!-- TEMPLATE: repetir para cada métrica -->
+          <!-- TEMPLATE: repeat for each metric -->
           <tr>
             <td style="color:var(--text-primary);">{{COMP_METRICA}}</td>
             <td class="compare-before">{{COMP_ANTES}}</td>
@@ -199,7 +199,7 @@
   <!-- TENDÊNCIA -->
   <div class="section">
     <div class="section-header">
-      <h2>Tendência</h2>
+      <h2>Trend</h2>
     </div>
     <div class="section-body" style="padding:20px;">
       <p style="font-size:14px;color:var(--text-secondary);line-height:1.7;">{{TENDENCIA_TEXTO}}</p>
@@ -209,10 +209,10 @@
   <!-- RECOMENDAÇÕES -->
   <div class="section">
     <div class="section-header">
-      <h2>Recomendações</h2>
+      <h2>Recommendations</h2>
     </div>
     <div class="section-body">
-      <!-- TEMPLATE: repetir para cada recomendação -->
+      <!-- TEMPLATE: repeat for each recommendation -->
       <div class="list-item">{{RECOMENDACAO_ITEM}}</div>
       <!-- /TEMPLATE -->
     </div>
@@ -222,7 +222,7 @@
 
 <!-- FOOTER -->
 <div class="footer">
-  Gerado automaticamente por <span>OpenClaude</span> — Agente Kai — {{TIMESTAMP}}
+  Automatically generated by <span>OpenClaude</span> — Agent Kai — {{TIMESTAMP}}
 </div>
 
 </body>

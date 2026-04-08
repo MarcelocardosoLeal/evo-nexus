@@ -26,7 +26,7 @@ def connect():
     env = read_env()
     client_id = env.get("LINKEDIN_CLIENT_ID", "")
     if not client_id:
-        return _missing("LINKEDIN_CLIENT_ID e LINKEDIN_CLIENT_SECRET")
+        return _missing("LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET")
 
     state = secrets.token_urlsafe(32)
     session["oauth_state_linkedin"] = state
@@ -100,8 +100,8 @@ def _missing(keys):
     return f"""
     <html><body style="background:#0C111D;color:#F9FAFB;font-family:Inter,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;">
     <div style="background:#182230;border:1px solid #344054;border-radius:12px;padding:40px;max-width:500px;">
-        <h2 style="color:#F04438;">Configuração necessária</h2>
-        <p style="color:#D0D5DD;">Configure <code>{keys}</code> no <code>.env</code></p>
-        <a href="/" style="color:#00FFA7;">Voltar</a>
+        <h2 style="color:#F04438;">Configuration required</h2>
+        <p style="color:#D0D5DD;">Configure <code>{keys}</code> in <code>.env</code></p>
+        <a href="/" style="color:#00FFA7;">Back</a>
     </div></body></html>
     """

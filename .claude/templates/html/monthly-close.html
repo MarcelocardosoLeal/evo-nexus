@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -102,7 +102,7 @@
 <div class="header">
   <div class="header-left">
     <h1><span>Monthly</span> Close</h1>
-    <div class="subtitle">{{MES_REFERENCIA}} — Kickoff do fechamento mensal</div>
+    <div class="subtitle">{{MES_REFERENCIA}} — Monthly close kickoff</div>
   </div>
   <div class="header-right">
     <span class="badge {{CLOSE_STATUS_CLASS}}">{{CLOSE_STATUS}}</span>
@@ -112,37 +112,37 @@
 <div class="container">
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- RESUMO DO MÊS ANTERIOR                        -->
+  <!-- PREVIOUS MONTH SUMMARY                        -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="grid-4">
     <div class="metric-card">
-      <div class="label">Receita Total</div>
+      <div class="label">Total Revenue</div>
       <div class="value">{{RECEITA_MES}}</div>
-      <div class="delta {{RECEITA_DELTA_CLASS}}">{{RECEITA_DELTA}} vs mês anterior</div>
+      <div class="delta {{RECEITA_DELTA_CLASS}}">{{RECEITA_DELTA}} vs previous month</div>
     </div>
     <div class="metric-card">
-      <div class="label">Despesa Total</div>
+      <div class="label">Total Expense</div>
       <div class="value">{{DESPESA_MES}}</div>
-      <div class="delta {{DESPESA_DELTA_CLASS}}">{{DESPESA_DELTA}} vs mês anterior</div>
+      <div class="delta {{DESPESA_DELTA_CLASS}}">{{DESPESA_DELTA}} vs previous month</div>
     </div>
     <div class="metric-card">
-      <div class="label">Resultado</div>
+      <div class="label">Result</div>
       <div class="value">{{RESULTADO_MES}}</div>
       <div class="delta {{RESULTADO_DELTA_CLASS}}">{{RESULTADO_DELTA}}</div>
     </div>
     <div class="metric-card">
-      <div class="label">Margem</div>
+      <div class="label">Margin</div>
       <div class="value">{{MARGEM_MES}}</div>
-      <div class="delta {{MARGEM_DELTA_CLASS}}">{{MARGEM_DELTA}} vs mês anterior</div>
+      <div class="delta {{MARGEM_DELTA_CLASS}}">{{MARGEM_DELTA}} vs previous month</div>
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- CHECKLIST DE FECHAMENTO                        -->
+  <!-- CLOSE CHECKLIST                        -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Checklist de Fechamento</h2>
+      <h2>Close Checklist</h2>
       <span class="count">{{CHECKLIST_PROGRESSO}}</span>
     </div>
     <div class="section-body">
@@ -151,14 +151,14 @@
           <div class="progress-bar-fill evo" style="width: {{CHECKLIST_PCT}}%"></div>
         </div>
       </div>
-      <!-- TEMPLATE: repetir para cada item do checklist -->
+      <!-- TEMPLATE: repeat for each checklist item -->
       {{CHECKLIST_ROWS}}
       <!-- /TEMPLATE -->
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- DRE SIMPLIFICADA                               -->
+  <!-- SIMPLIFIED P&L                               -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
@@ -168,14 +168,14 @@
       <table>
         <thead>
           <tr>
-            <th>Conta</th>
-            <th class="right">Realizado</th>
-            <th class="right">Mês Anterior</th>
-            <th class="right">Variação</th>
+            <th>Account</th>
+            <th class="right">Actual</th>
+            <th class="right">Previous Month</th>
+            <th class="right">Change</th>
           </tr>
         </thead>
         <tbody>
-          <!-- TEMPLATE: repetir para cada linha da DRE -->
+          <!-- TEMPLATE: repeat for each P&L line -->
           {{DRE_ROWS}}
           <!-- /TEMPLATE -->
         </tbody>
@@ -184,22 +184,22 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- CONCILIAÇÕES PENDENTES                         -->
+  <!-- PENDING RECONCILIATIONS                         -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="two-col">
     <!-- Contas a Receber Pendentes -->
     <div class="section">
       <div class="section-header">
-        <h2>A Receber Pendentes</h2>
+        <h2>Pending Receivables</h2>
         <span class="count">{{RECEBER_COUNT}}</span>
       </div>
       <div class="section-body">
         <table>
           <thead>
             <tr>
-              <th>Cliente</th>
-              <th class="right">Valor</th>
-              <th>Vencimento</th>
+              <th>Client</th>
+              <th class="right">Amount</th>
+              <th>Due Date</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -215,17 +215,17 @@
     <!-- NFs Pendentes -->
     <div class="section">
       <div class="section-header">
-        <h2>NFs Pendentes de Emissão</h2>
+        <h2>Pending Invoice Issuance</h2>
         <span class="count">{{NFS_PENDENTES_COUNT}}</span>
       </div>
       <div class="section-body">
         <table>
           <thead>
             <tr>
-              <th>Cliente</th>
-              <th class="right">Valor</th>
-              <th>Referência</th>
-              <th>Responsável</th>
+              <th>Client</th>
+              <th class="right">Amount</th>
+              <th>Reference</th>
+              <th>Responsible</th>
             </tr>
           </thead>
           <tbody>
@@ -239,21 +239,21 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- CONTAS A PAGAR PRÓXIMO MÊS                     -->
+  <!-- ACCOUNTS PAYABLE NEXT MONTH                     -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Contas a Pagar — Próximo Mês</h2>
+      <h2>Accounts Payable — Next Month</h2>
       <span class="count">{{PAGAR_COUNT}}</span>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Fornecedor / Descrição</th>
-            <th>Categoria</th>
-            <th class="right">Valor</th>
-            <th>Vencimento</th>
+            <th>Supplier / Description</th>
+            <th>Category</th>
+            <th class="right">Amount</th>
+            <th>Due Date</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -267,15 +267,15 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- AÇÕES & PENDÊNCIAS SAMARA                      -->
+  <!-- ACTIONS & PENDING ITEMS SAMARA                      -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="highlight-card">
-    <div class="title">Pendências para Samara</div>
+    <div class="title">Pending Items for Samara</div>
     <div class="body">{{PENDENCIAS_SAMARA}}</div>
   </div>
 
   <div class="highlight-card">
-    <div class="title">Observações do Fechamento</div>
+    <div class="title">Close Observations</div>
     <div class="body">{{OBSERVACOES_FECHAMENTO}}</div>
   </div>
 
@@ -283,7 +283,7 @@
 
 <!-- FOOTER -->
 <div class="footer">
-  Gerado automaticamente por <span>Evolution Foundation</span> — Agente Flux — {{TIMESTAMP}}
+  Automatically generated by <span>Evolution Foundation</span> — Agent Flux — {{TIMESTAMP}}
 </div>
 
 </body>

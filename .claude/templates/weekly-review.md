@@ -5,29 +5,29 @@ date: {{YYYY-MM-DD}}
 week: {{YYYY-WXX}}
 ---
 
-# Revisão Semanal — Semana {{WXX}}, {{Mês}} {{YYYY}}
+# Weekly Review — Week {{WXX}}, {{Month}} {{YYYY}}
 
-## O que foi feito
-- {{bullets das realizações da semana}}
+## What Was Done
+- {{bullets of the week's accomplishments}}
 
-## Reuniões
-- {{N}} reuniões, {{T}} tarefas geradas
+## Meetings
+- {{N}} meetings, {{T}} tasks generated
 
-## Tarefas
-- **Concluídas:** {{N}}
-- **Atrasadas:** {{N}}
-- **Próxima semana:** {{N}}
+## Tasks
+- **Completed:** {{N}}
+- **Overdue:** {{N}}
+- **Next week:** {{N}}
 
-## Follow-ups pendentes
-- {{email/pessoa — assunto — dias sem resposta}}
+## Pending Follow-ups
+- {{email/person — subject — days without response}}
 
-## Próxima semana
+## Next Week
 
 ### Agenda
-- {{eventos da semana}}
+- {{week's events}}
 
-### Foco recomendado
-{{recomendação de prioridade}}
+### Recommended Focus
+{{priority recommendation}}
 
-## Decisões e aprendizados da semana
-- {{decisão ou aprendizado relevante}}
+## Decisions and Learnings of the Week
+- {{relevant decision or learning}}

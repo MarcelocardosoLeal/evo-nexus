@@ -1,7 +1,7 @@
 [project]
 name = "claude-cowork-workspace"
 version = "0.1.0"
-description = "Workspace operacional com ADWs e rotinas automatizadas"
+description = "Operational workspace with ADWs and automated routines"
 requires-python = ">=3.10"
 dependencies = [
     "rich>=13.0",

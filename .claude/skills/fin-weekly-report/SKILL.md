@@ -3,144 +3,144 @@ name: fin-weekly-report
 description: "Weekly financial report — consolidates Stripe and Omie data for the week: revenue, expenses, cash flow projection, overdue accounts, and variance analysis. Trigger when user says 'relatório financeiro semanal', 'financial weekly', 'como foi a semana financeiramente', 'resumo financeiro da semana'."
 ---
 
-# Financial Weekly — Relatório Financeiro Semanal
+# Financial Weekly — Weekly Financial Report
 
-Rotina semanal que consolida dados financeiros da semana: receitas, despesas, Stripe, Omie, fluxo de caixa projetado e análise.
+Weekly routine that consolidates the week's financial data: revenue, expenses, Stripe, Omie, projected cash flow, and analysis.
 
-**Sempre responder em pt-BR.**
+**Always respond in English.**
 
-## Step 1 — Coletar receitas da semana (silenciosamente)
+## Step 1 — Collect the week's revenue (silently)
 
-### 1a. Stripe — receitas
-Usar `/int-stripe` para buscar:
-- Charges succeeded da semana (seg-dom) → agrupar por tipo/plano
-- Comparar com semana anterior
-- MRR atual vs início da semana
-- Novos clientes vs cancelamentos
-- Falhas de pagamento
+### 1a. Stripe — revenue
+Use `/int-stripe` to fetch:
+- Succeeded charges for the week (Mon-Sun) → group by type/plan
+- Compare with previous week
+- Current MRR vs start of week
+- New customers vs cancellations
+- Payment failures
 
-### 1b. Omie — receitas
-Usar `/int-omie` para buscar:
-- Recebimentos confirmados na semana
-- NFs emitidas na semana
+### 1b. Omie — revenue
+Use `/int-omie` to fetch:
+- Confirmed receipts for the week
+- Invoices issued during the week
 
-Agrupar receitas por categoria:
-- Assinaturas Stripe
-- Serviços / Consultoria
-- Parcerias
-- Outros
+Group revenue by category:
+- Stripe Subscriptions
+- Services / Consulting
+- Partnerships
+- Other
 
-## Step 2 — Coletar despesas da semana (silenciosamente)
+## Step 2 — Collect the week's expenses (silently)
 
-### 2a. Omie — despesas
-Usar `/int-omie` para buscar:
-- Pagamentos efetuados na semana
-- Categorizar: Pessoal, Infraestrutura, Serviços, Marketing, Impostos, Outros
+### 2a. Omie — expenses
+Use `/int-omie` to fetch:
+- Payments made during the week
+- Categorize: Personnel, Infrastructure, Services, Marketing, Taxes, Other
 
-### 2b. Comparativo
-- Calcular variação vs semana anterior para cada categoria
-- Calcular % do total para cada categoria
+### 2b. Comparison
+- Calculate variance vs previous week for each category
+- Calculate % of total for each category
 
-## Step 3 — Stripe detalhado
+## Step 3 — Detailed Stripe metrics
 
-Consolidar métricas Stripe da semana:
-- MRR e variação
-- Total de assinaturas ativas e variação
+Consolidate the week's Stripe metrics:
+- MRR and variance
+- Total active subscriptions and variance
 - Churn rate
-- Novos clientes
-- Falhas de pagamento e valor em risco
+- New customers
+- Payment failures and at-risk amount
 
-## Step 4 — Omie detalhado
+## Step 4 — Detailed Omie metrics
 
-Consolidar métricas Omie da semana:
-- Contas a receber vencidas (inadimplência)
-- Contas a pagar da próxima semana
-- NFs pendentes de emissão
-- NFs emitidas na semana
-- Recebimentos confirmados
+Consolidate the week's Omie metrics:
+- Overdue receivables (delinquency)
+- Next week's payables
+- Invoices pending issuance
+- Invoices issued during the week
+- Confirmed receipts
 
-## Step 5 — Projeção de fluxo de caixa (4 semanas)
+## Step 5 — Cash flow projection (4 weeks)
 
-Com base nos dados coletados, projetar:
-- Entradas esperadas (recorrência Stripe + contas a receber)
-- Saídas esperadas (contas a pagar + despesas recorrentes)
-- Saldo e acumulado por semana
+Based on collected data, project:
+- Expected inflows (Stripe recurring + receivables)
+- Expected outflows (payables + recurring expenses)
+- Balance and cumulative by week
 
-## Step 6 — Contas vencidas
+## Step 6 — Overdue accounts
 
-Listar todas as contas vencidas (a receber e a pagar):
-- Cliente/Fornecedor, tipo, valor, vencimento, dias de atraso
+List all overdue accounts (receivable and payable):
+- Client/Vendor, type, amount, due date, days overdue
 
-## Step 7 — Análise e recomendações
+## Step 7 — Analysis and recommendations
 
-Escrever análise curta (3-5 bullets) cobrindo:
-- Tendência de receita (crescendo/estável/caindo)
-- Gastos fora do padrão
-- Situação de inadimplência
-- Fluxo de caixa (confortável ou apertado)
+Write a brief analysis (3-5 bullets) covering:
+- Revenue trend (growing/stable/declining)
+- Out-of-pattern spending
+- Delinquency status
+- Cash flow (comfortable or tight)
 
-Escrever ações recomendadas (bullets):
-- Cobranças a fazer
-- NFs a emitir
-- Pagamentos a antecipar/postergar
-- Qualquer flag para o responsável ou equipe financeira
+Write recommended actions (bullets):
+- Collections to make
+- Invoices to issue
+- Payments to expedite/postpone
+- Any flags for the responsible person or finance team
 
-## Step 8 — Classificar saúde financeira
+## Step 8 — Classify financial health
 
-Badge de saúde (classe CSS):
-- **green** "Saudável": receita > despesa, sem inadimplência relevante, fluxo positivo
-- **yellow** "Atenção": margem apertada, ou inadimplência > R$ 2.000, ou fluxo projetado negativo
-- **red** "Risco": despesa > receita, ou inadimplência > R$ 10.000, ou runway < 3 meses
+Health badge (CSS class):
+- **green** "Healthy": revenue > expenses, no significant delinquency, positive cash flow
+- **yellow** "Warning": tight margins, or delinquency > R$ 2,000, or projected negative cash flow
+- **red** "Risk": expenses > revenue, or delinquency > R$ 10,000, or runway < 3 months
 
-## Step 9 — Gerar HTML
+## Step 9 — Generate HTML
 
-Ler o template em `.claude/templates/html/financial-weekly.html` e substituir TODOS os `{{PLACEHOLDER}}`.
+Read the template at `.claude/templates/html/financial-weekly.html` and replace ALL `{{PLACEHOLDER}}`.
 
-Para tabelas dinâmicas de receitas/despesas:
+For dynamic revenue/expense tables:
 ```html
 <tr>
-  <td>Nome da Categoria</td>
-  <td class="right">R$ X.XXX,XX</td>
+  <td>Category Name</td>
+  <td class="right">R$ X,XXX.XX</td>
   <td class="right">XX%</td>
   <td class="right var-positive/var-negative">+X% / -X%</td>
 </tr>
 ```
 
-Para fluxo de caixa:
+For cash flow:
 ```html
 <tr>
-  <td>Semana DD/MM - DD/MM</td>
-  <td class="right">R$ X.XXX</td>
-  <td class="right">R$ X.XXX</td>
-  <td class="right" style="color:var(--green/--red)">R$ X.XXX</td>
-  <td class="right">R$ XX.XXX</td>
+  <td>Week DD/MM - DD/MM</td>
+  <td class="right">R$ X,XXX</td>
+  <td class="right">R$ X,XXX</td>
+  <td class="right" style="color:var(--green/--red)">R$ X,XXX</td>
+  <td class="right">R$ XX,XXX</td>
 </tr>
 ```
 
-Valores em formato brasileiro: R$ 1.234,56
+Values in Brazilian format: R$ 1.234,56
 
-## Step 10 — Salvar
+## Step 10 — Save
 
-Salvar em:
+Save to:
 ```
 05 Financeiro/reports/weekly/[C] YYYY-WXX-financial-weekly.html
 ```
 
-Criar o diretório `05 Financeiro/reports/weekly/` se não existir.
+Create the directory `05 Financeiro/reports/weekly/` if it does not exist.
 
-## Step 11 — Confirmar
+## Step 11 — Confirm
 
 ```
-## Financial Weekly gerado
+## Financial Weekly generated
 
-**Arquivo:** 05 Financeiro/reports/weekly/[C] YYYY-WXX-financial-weekly.html
-**Receita:** R$ X.XXX ({var}%) | **Despesa:** R$ X.XXX ({var}%)
-**MRR:** R$ X.XXX | **Saldo projetado 30d:** R$ XX.XXX
-**Alertas:** {N} contas vencidas | {N} NFs pendentes
+**File:** 05 Financeiro/reports/weekly/[C] YYYY-WXX-financial-weekly.html
+**Revenue:** R$ X,XXX ({var}%) | **Expenses:** R$ X,XXX ({var}%)
+**MRR:** R$ X,XXX | **Projected 30d balance:** R$ XX,XXX
+**Alerts:** {N} overdue accounts | {N} pending invoices
 ```
 
-### Notificar no Telegram
+### Notify via Telegram
 
-Ao finalizar, enviar resumo curto no Telegram para o usuário:
-- Usar o MCP do Telegram: `reply(chat_id="YOUR_CHAT_ID", text="...")`
-- Formato: emoji + "Financial Weekly" + receita vs despesa + MRR + alertas (2-3 linhas)
+Upon completion, send a short summary via Telegram to the user:
+- Use the Telegram MCP: `reply(chat_id="YOUR_CHAT_ID", text="...")`
+- Format: emoji + "Financial Weekly" + revenue vs expenses + MRR + alerts (2-3 lines)

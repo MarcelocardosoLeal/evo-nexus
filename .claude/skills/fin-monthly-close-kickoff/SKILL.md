@@ -3,170 +3,170 @@ name: fin-monthly-close-kickoff
 description: "Monthly close kickoff — initiates the month-end closing process with a checklist, simplified P&L, pending reconciliations, receivables, payables, and action items for the finance team. Trigger when user says 'fechamento mensal', 'monthly close', 'inicia fechamento', 'kickoff do fechamento', or on the 1st of each month."
 ---
 
-# Monthly Close Kickoff — Fechamento Mensal
+# Monthly Close Kickoff
 
-Rotina mensal que inicia o processo de fechamento: gera checklist, DRE simplificada, pendências e ações para a equipe financeira.
+Monthly routine that initiates the closing process: generates a checklist, simplified income statement, pending items, and action items for the finance team.
 
-**Sempre responder em pt-BR.**
+**Always respond in English.**
 
-**IMPORTANTE:** Esta rotina roda no dia 1 de cada mês e se refere ao fechamento do mês ANTERIOR.
+**IMPORTANT:** This routine runs on the 1st of each month and refers to the PREVIOUS month's close.
 
-## Step 1 — Determinar período
+## Step 1 — Determine period
 
-- Mês de referência: mês anterior ao atual (ex: se hoje é 01/04, fechar março)
-- Período: primeiro ao último dia do mês de referência
+- Reference month: the month prior to the current one (e.g., if today is April 1st, close March)
+- Period: first to last day of the reference month
 
-## Step 2 — Coletar dados do mês (silenciosamente)
+## Step 2 — Collect month's data (silently)
 
-### 2a. Receitas (Stripe)
-Usar `/int-stripe`:
-- Total de charges succeeded no mês
-- MRR no final do mês vs início
-- Assinaturas: novas, canceladas, upgrades, downgrades
-- Reembolsos do mês
+### 2a. Revenue (Stripe)
+Use `/int-stripe`:
+- Total succeeded charges for the month
+- MRR at end of month vs start
+- Subscriptions: new, canceled, upgrades, downgrades
+- Month's refunds
 
-### 2b. Receitas e despesas (Omie)
-Usar `/int-omie`:
-- Total de receitas recebidas no mês
-- Total de despesas pagas no mês
-- Categorizar por tipo (Pessoal, Infra, Serviços, Marketing, Impostos, etc.)
-- NFs emitidas no mês
-- NFs que deveriam ter sido emitidas e não foram
+### 2b. Revenue and expenses (Omie)
+Use `/int-omie`:
+- Total revenue received during the month
+- Total expenses paid during the month
+- Categorize by type (Personnel, Infrastructure, Services, Marketing, Taxes, etc.)
+- Invoices issued during the month
+- Invoices that should have been issued but were not
 
-### 2c. Contas a receber pendentes
-- Listar todas as contas a receber abertas (do mês ou anteriores)
-- Destacar vencidas
+### 2c. Outstanding receivables
+- List all open receivables (from the month or earlier)
+- Highlight overdue items
 
-### 2d. Contas a pagar do próximo mês
-- Listar contas a pagar com vencimento no mês corrente (próximo mês)
+### 2d. Next month's payables
+- List payables due in the current month (the upcoming month)
 
-### 2e. Mês anterior (para comparação)
-- Ler relatório financeiro do mês anterior em `05 Financeiro/reports/monthly/` se existir
-- Ou usar dados do último monthly close
+### 2e. Previous month (for comparison)
+- Read the previous month's financial report from `05 Financeiro/reports/monthly/` if it exists
+- Or use data from the last monthly close
 
-## Step 3 — Montar DRE simplificada
+## Step 3 — Build simplified income statement
 
-Estruturar DRE com:
+Structure the income statement with:
 
-| Conta | Realizado | Mês Anterior | Variação |
-|-------|-----------|-------------|----------|
-| Receita Bruta (Stripe) | | | |
-| Receita Bruta (Omie/Serviços) | | | |
-| (-) Impostos | | | |
-| **Receita Líquida** | | | |
-| (-) Pessoal | | | |
-| (-) Infraestrutura | | | |
-| (-) Serviços terceiros | | | |
+| Account | Actual | Prior Month | Variance |
+|---------|--------|-------------|----------|
+| Gross Revenue (Stripe) | | | |
+| Gross Revenue (Omie/Services) | | | |
+| (-) Taxes | | | |
+| **Net Revenue** | | | |
+| (-) Personnel | | | |
+| (-) Infrastructure | | | |
+| (-) Third-party Services | | | |
 | (-) Marketing | | | |
-| (-) Outros | | | |
-| **Total Despesas** | | | |
-| **Resultado Operacional** | | | |
-| Margem | | | |
+| (-) Other | | | |
+| **Total Expenses** | | | |
+| **Operating Result** | | | |
+| Margin | | | |
 
-## Step 4 — Montar checklist de fechamento
+## Step 4 — Build closing checklist
 
-Gerar checklist com status inicial para cada item:
+Generate a checklist with initial status for each item:
 
-1. **Conciliar Stripe** — verificar se todas as charges batem com os recebimentos
-2. **Conciliar Omie** — verificar se entradas e saídas no ERP estão corretas
-3. **Emitir NFs pendentes** — listar NFs que precisam ser emitidas (equipe financeira)
-4. **Cobrar inadimplentes** — listar clientes com pagamento atrasado
-5. **Categorizar despesas** — verificar se todas as despesas estão categorizadas
-6. **Revisar lançamentos** — verificar lançamentos manuais ou atípicos
-7. **Calcular impostos** — verificar obrigações fiscais do mês
-8. **Gerar DRE final** — após conciliações, gerar DRE definitiva
-9. **Aprovar fechamento** — O responsável revisa e aprova
+1. **Reconcile Stripe** — verify all charges match received payments
+2. **Reconcile Omie** — verify entries and exits in the ERP are correct
+3. **Issue pending invoices** — list invoices that need to be issued (finance team)
+4. **Collect overdue accounts** — list clients with late payments
+5. **Categorize expenses** — verify all expenses are categorized
+6. **Review entries** — verify manual or atypical entries
+7. **Calculate taxes** — verify month's tax obligations
+8. **Generate final income statement** — after reconciliations, generate the definitive P&L
+9. **Approve close** — the responsible person reviews and approves
 
-Status possíveis:
-- `done` (✓) — já concluído automaticamente
-- `pending` (◯) — precisa ser feito
-- `blocked` (✗) — depende de algo externo
-- `na` (—) — não aplicável este mês
+Possible statuses:
+- `done` (checkmark) — already completed automatically
+- `pending` (circle) — needs to be done
+- `blocked` (x) — depends on something external
+- `na` (dash) — not applicable this month
 
-## Step 5 — Identificar pendências para a equipe financeira
+## Step 5 — Identify pending items for the finance team
 
-Listar em bullets claros o que precisa da equipe financeira:
-- NFs a emitir (quais clientes, valores)
-- Pagamentos a confirmar
-- Documentos faltando
-- Prazos
+List in clear bullets what the finance team needs to handle:
+- Invoices to issue (which clients, amounts)
+- Payments to confirm
+- Missing documents
+- Deadlines
 
-## Step 6 — Observações do fechamento
+## Step 6 — Closing observations
 
-Notas relevantes:
-- Despesas atípicas (não recorrentes)
-- Mudanças de plano de clientes
-- Qualquer anomalia identificada
-- Impacto de eventos do mês (ex: evento corporativo, parceria nova)
+Relevant notes:
+- Atypical (non-recurring) expenses
+- Client plan changes
+- Any anomalies identified
+- Impact of monthly events (e.g., corporate event, new partnership)
 
-## Step 7 — Classificar status do close
+## Step 7 — Classify close status
 
 Badge:
-- **green** "No prazo": maioria dos itens ok, sem blockers
-- **yellow** "Em andamento": itens pendentes mas sem risco
-- **red** "Atrasado": bloqueios ou itens críticos pendentes
+- **green** "On track": most items ok, no blockers
+- **yellow** "In progress": pending items but no risk
+- **red** "Delayed": blockers or critical pending items
 
-## Step 8 — Gerar HTML
+## Step 8 — Generate HTML
 
-Ler o template em `.claude/templates/html/monthly-close.html` e substituir TODOS os `{{PLACEHOLDER}}`.
+Read the template at `.claude/templates/html/monthly-close.html` and replace ALL `{{PLACEHOLDER}}`.
 
-Para checklist:
+For checklist:
 ```html
 <div class="checklist-item">
-  <div class="check-icon done/pending/blocked/na">✓/◯/✗/—</div>
+  <div class="check-icon done/pending/blocked/na">checkmark/circle/x/dash</div>
   <div class="checklist-text">
-    <div class="cl-title">Nome do item</div>
-    <div class="cl-detail">Detalhe ou observação</div>
+    <div class="cl-title">Item name</div>
+    <div class="cl-detail">Detail or observation</div>
   </div>
-  <div class="checklist-owner">Financeiro / Admin / Auto</div>
+  <div class="checklist-owner">Finance / Admin / Auto</div>
 </div>
 ```
 
-Para DRE:
+For income statement:
 ```html
 <tr>
-  <td>Nome da conta</td>
-  <td class="right">R$ X.XXX,XX</td>
-  <td class="right">R$ X.XXX,XX</td>
+  <td>Account name</td>
+  <td class="right">R$ X,XXX.XX</td>
+  <td class="right">R$ X,XXX.XX</td>
   <td class="right var-positive/var-negative">+X% / -X%</td>
 </tr>
 ```
 
-Linhas totais usar `class="total"`:
+Total rows use `class="total"`:
 ```html
 <tr class="total">
-  <td>Resultado Operacional</td>
-  <td class="right">R$ X.XXX,XX</td>
-  <td class="right">R$ X.XXX,XX</td>
+  <td>Operating Result</td>
+  <td class="right">R$ X,XXX.XX</td>
+  <td class="right">R$ X,XXX.XX</td>
   <td class="right var-positive">+X%</td>
 </tr>
 ```
 
-Valores em formato brasileiro: R$ 1.234,56
+Values in Brazilian format: R$ 1.234,56
 
-## Step 9 — Salvar
+## Step 9 — Save
 
-Salvar em:
+Save to:
 ```
 05 Financeiro/reports/monthly/[C] YYYY-MM-monthly-close.html
 ```
 
-Criar o diretório `05 Financeiro/reports/monthly/` se não existir.
+Create the directory `05 Financeiro/reports/monthly/` if it does not exist.
 
-## Step 10 — Confirmar
+## Step 10 — Confirm
 
 ```
-## Monthly Close Kickoff gerado
+## Monthly Close Kickoff generated
 
-**Arquivo:** 05 Financeiro/reports/monthly/[C] YYYY-MM-monthly-close.html
-**Mês:** {mês de referência}
-**Receita:** R$ X.XXX | **Despesa:** R$ X.XXX | **Resultado:** R$ X.XXX
-**Checklist:** X/9 concluídos
-**Pendências equipe financeira:** {N} itens
+**File:** 05 Financeiro/reports/monthly/[C] YYYY-MM-monthly-close.html
+**Month:** {reference month}
+**Revenue:** R$ X,XXX | **Expenses:** R$ X,XXX | **Result:** R$ X,XXX
+**Checklist:** X/9 completed
+**Finance team pending items:** {N} items
 ```
 
-### Notificar no Telegram
+### Notify via Telegram
 
-Ao finalizar, enviar resumo curto no Telegram para o usuário:
-- Usar o MCP do Telegram: `reply(chat_id="YOUR_CHAT_ID", text="...")`
-- Formato: emoji + "Monthly Close" + resultado do mês + pendências (2-3 linhas)
+Upon completion, send a short summary via Telegram to the user:
+- Use the Telegram MCP: `reply(chat_id="YOUR_CHAT_ID", text="...")`
+- Format: emoji + "Monthly Close" + month's result + pending items (2-3 lines)

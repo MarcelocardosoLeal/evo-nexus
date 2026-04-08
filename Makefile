@@ -1,148 +1,148 @@
 # ============================================================
 # ADW Rotinas — Makefile
 # ============================================================
-# Uso: make <rotina>
+# Usage: make <routine>
 # Logs: ADWs/logs/
 # ============================================================
 
 PYTHON := uv run python
 ADW_DIR := ADWs/rotinas
 
-# Carrega .env se existir
+# Load .env if it exists
 ifneq (,$(wildcard .env))
 include .env
 export
 endif
 
-# --- Rotinas diárias ---
+# --- Daily routines ---
 
-morning:            ## ☀️  Briefing matinal — agenda, emails, tarefas (@clawdia)
+morning:            ## ☀️  Morning briefing — agenda, emails, tasks (@clawdia)
 	$(PYTHON) $(ADW_DIR)/good_morning.py
 
-sync:               ## 🎙️  Sync reuniões Fathom → Todoist (@clawdia)
+sync:               ## 🎙️  Sync Fathom meetings → Todoist (@clawdia)
 	$(PYTHON) $(ADW_DIR)/sync_meetings.py
 
-triage:             ## 📧 Triagem de emails (@clawdia)
+triage:             ## 📧 Email triage (@clawdia)
 	$(PYTHON) $(ADW_DIR)/email_triage.py
 
-review:             ## 📋 Organiza tarefas no Todoist (@clawdia)
+review:             ## 📋 Organize tasks in Todoist (@clawdia)
 	$(PYTHON) $(ADW_DIR)/review_todoist.py
 
-memory:             ## 🧠 Consolida memória (@clawdia)
+memory:             ## 🧠 Consolidate memory (@clawdia)
 	$(PYTHON) $(ADW_DIR)/memory_sync.py
 
-eod:                ## 🌙 Consolidação do dia — memória, logs, aprendizados (@clawdia)
+eod:                ## 🌙 End of day consolidation — memory, logs, learnings (@clawdia)
 	$(PYTHON) $(ADW_DIR)/end_of_day.py
 
-dashboard:          ## 📊 Dashboard consolidado — visão 360 do negócio (@clawdia)
+dashboard:          ## 📊 Consolidated dashboard — 360 business view (@clawdia)
 	$(PYTHON) $(ADW_DIR)/dashboard.py
 
-fin-pulse:          ## 💰 Financial Pulse — snapshot financeiro diário (@flux)
+fin-pulse:          ## 💰 Financial Pulse — daily financial snapshot (@flux)
 	$(PYTHON) $(ADW_DIR)/financial_pulse.py
 
-youtube:            ## 📺 YouTube Report — analytics do canal (@pixel)
+youtube:            ## 📺 YouTube Report — channel analytics (@pixel)
 	$(PYTHON) $(ADW_DIR)/youtube_report.py
 
-instagram:          ## 📸 Instagram Report — analytics dos perfis (@pixel)
+instagram:          ## 📸 Instagram Report — profile analytics (@pixel)
 	$(PYTHON) $(ADW_DIR)/instagram_report.py
 
-linkedin:           ## 💼 LinkedIn Report — analytics do perfil (@pixel)
+linkedin:           ## 💼 LinkedIn Report — profile analytics (@pixel)
 	$(PYTHON) $(ADW_DIR)/linkedin_report.py
 
-social:             ## 📊 Social Analytics — relatório consolidado cross-platform (@pixel)
+social:             ## 📊 Social Analytics — consolidated cross-platform report (@pixel)
 	$(PYTHON) $(ADW_DIR)/social_analytics.py
 
-licensing:          ## 📊 Licensing Daily — crescimento open source diário (@atlas)
+licensing:          ## 📊 Licensing Daily — daily open source growth (@atlas)
 	$(PYTHON) $(ADW_DIR)/licensing_daily.py
 
-# --- Rotinas semanais financeiras ---
+# --- Weekly financial routines ---
 
-fin-weekly:         ## 📊 Financial Weekly — relatório financeiro semanal (@flux)
+fin-weekly:         ## 📊 Financial Weekly — weekly financial report (@flux)
 	$(PYTHON) $(ADW_DIR)/financial_weekly.py
 
-licensing-weekly:   ## 📊 Licensing Weekly — crescimento open source semanal (@atlas)
+licensing-weekly:   ## 📊 Licensing Weekly — weekly open source growth (@atlas)
 	$(PYTHON) $(ADW_DIR)/licensing_weekly.py
 
-# --- Rotinas mensais ---
+# --- Monthly routines ---
 
-fin-close:          ## 📋 Monthly Close — kickoff do fechamento mensal (@flux)
+fin-close:          ## 📋 Monthly Close — monthly close kickoff (@flux)
 	$(PYTHON) $(ADW_DIR)/monthly_close.py
 
-community-month:    ## 📊 Community Monthly — relatório mensal da comunidade (@pulse)
+community-month:    ## 📊 Community Monthly — monthly community report (@pulse)
 	$(PYTHON) $(ADW_DIR)/community_monthly.py
 
-licensing-month:    ## 📊 Licensing Monthly — crescimento open source mensal (@atlas)
+licensing-month:    ## 📊 Licensing Monthly — monthly open source growth (@atlas)
 	$(PYTHON) $(ADW_DIR)/licensing_monthly.py
 
-# --- Rotinas semanais ---
+# --- Weekly routines ---
 
-weekly:             ## 📊 Revisão semanal completa (@clawdia)
+weekly:             ## 📊 Full weekly review (@clawdia)
 	$(PYTHON) $(ADW_DIR)/weekly_review.py
 
-health:             ## 🏥 Check-in semanal de saúde (@kai)
+health:             ## 🏥 Weekly health check-in (@kai)
 	$(PYTHON) $(ADW_DIR)/health_checkin.py
 
-trends:             ## 📈 Análise de tendências semanal — comunidade, GitHub, financeiro (@clawdia)
+trends:             ## 📈 Weekly trend analysis — community, GitHub, financial (@clawdia)
 	$(PYTHON) $(ADW_DIR)/trends.py
 
-linear:             ## 🗂️  Review do Linear — issues em review, blockers, stale (@atlas)
+linear:             ## 🗂️  Linear review — issues in review, blockers, stale (@atlas)
 	$(PYTHON) $(ADW_DIR)/linear_review.py
 
-community:          ## 📣 Pulso diário da comunidade Discord (@pulse)
+community:          ## 📣 Daily Discord community pulse (@pulse)
 	$(PYTHON) $(ADW_DIR)/community_daily.py
 
-community-week:     ## 📊 Relatório semanal da comunidade Discord (@pulse)
+community-week:     ## 📊 Weekly Discord community report (@pulse)
 	$(PYTHON) $(ADW_DIR)/community_weekly.py
 
-strategy:           ## 🎯 Strategy Digest semanal — visão consolidada do negócio (@sage)
+strategy:           ## 🎯 Weekly Strategy Digest — consolidated business view (@sage)
 	$(PYTHON) $(ADW_DIR)/strategy_digest.py
 
-github:             ## 🐙 Review dos repos GitHub — PRs, issues, stars (@atlas)
+github:             ## 🐙 GitHub repos review — PRs, issues, stars (@atlas)
 	$(PYTHON) $(ADW_DIR)/github_review.py
 
-faq:                ## FAQ Sync — atualiza FAQ da comunidade (Discord + GitHub) (@pulse)
+faq:                ## FAQ Sync — update community FAQ (Discord + GitHub) (@pulse)
 	$(PYTHON) $(ADW_DIR)/faq_sync.py
 
 # --- Combos ---
 
 daily: sync review  ## Combo: sync meetings + review todoist
 
-# --- Servidores ---
+# --- Servers ---
 
-scheduler:          ## ⏰ Inicia scheduler de rotinas (roda em background)
+scheduler:          ## ⏰ Start routine scheduler (runs in background)
 	$(PYTHON) scheduler.py
 
-dashboard-app:      ## 🖥️  Inicia Dashboard App (React + Flask, localhost:8080) — inclui Social Auth
+dashboard-app:      ## 🖥️  Start Dashboard App (React + Flask, localhost:8080) — includes Social Auth
 	cd dashboard/frontend && npm run build && cd ../backend && $(PYTHON) app.py
 
-telegram:           ## 📨 Inicia bot Telegram em background (screen)
+telegram:           ## 📨 Start Telegram bot in background (screen)
 	@if screen -list | grep -q '\.telegram'; then \
-		echo "⚠ Telegram bot já está rodando. Use 'make telegram-stop' primeiro ou 'make telegram-attach' pra conectar."; \
+		echo "⚠ Telegram bot is already running. Use 'make telegram-stop' first or 'make telegram-attach' to connect."; \
 	else \
 		screen -dmS telegram claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions; \
-		echo "✅ Telegram bot rodando em background (screen: telegram)"; \
+		echo "✅ Telegram bot running in background (screen: telegram)"; \
 		echo "📺 Ver: screen -r telegram"; \
 		echo "🛑 Parar: make telegram-stop"; \
 	fi
 
-telegram-stop:      ## 🛑 Para o bot Telegram
-	@screen -S telegram -X quit 2>/dev/null && echo "✅ Telegram bot parado" || echo "⚠ Não estava rodando"
+telegram-stop:      ## 🛑 Stop the Telegram bot
+	@screen -S telegram -X quit 2>/dev/null && echo "✅ Telegram bot stopped" || echo "⚠ Was not running"
 
-telegram-attach:    ## 📺 Conecta ao terminal do Telegram (Ctrl+A D pra desanexar)
+telegram-attach:    ## 📺 Connect to Telegram terminal (Ctrl+A D to detach)
 	@screen -r telegram
 
-# --- Utilitários ---
+# --- Utilities ---
 
-logs:               ## 📝 Mostra últimos logs (JSONL)
-	@tail -20 ADWs/logs/$$(ls -t ADWs/logs/*.jsonl 2>/dev/null | head -1) 2>/dev/null || echo "Nenhum log ainda."
+logs:               ## 📝 Show latest logs (JSONL)
+	@tail -20 ADWs/logs/$$(ls -t ADWs/logs/*.jsonl 2>/dev/null | head -1) 2>/dev/null || echo "No logs yet."
 
-logs-detail:        ## 📝 Lista logs detalhados
-	@ls -lt ADWs/logs/detail/ 2>/dev/null | head -11 || echo "Nenhum log ainda."
+logs-detail:        ## 📝 List detailed logs
+	@ls -lt ADWs/logs/detail/ 2>/dev/null | head -11 || echo "No logs yet."
 
-logs-tail:          ## 📝 Mostra último log completo
-	@cat ADWs/logs/detail/$$(ls -t ADWs/logs/detail/ 2>/dev/null | head -1) 2>/dev/null || echo "Nenhum log ainda."
+logs-tail:          ## 📝 Show latest full log
+	@cat ADWs/logs/detail/$$(ls -t ADWs/logs/detail/ 2>/dev/null | head -1) 2>/dev/null || echo "No logs yet."
 
-metrics:            ## 📈 Mostra métricas acumuladas por rotina (tokens + custo)
+metrics:            ## 📈 Show accumulated metrics per routine (tokens + cost)
 	@python3 -c "\
 	import json; d=json.load(open('ADWs/logs/metrics.json'));\
 	total_runs=0; total_cost=0; total_tok=0;\
@@ -153,29 +153,29 @@ metrics:            ## 📈 Mostra métricas acumuladas por rotina (tokens + cus
 	  total_tok:=total_tok+v.get('total_input_tokens',0)+v.get('total_output_tokens',0)\
 	) for k,v in sorted(d.items())];\
 	print(f'\n  {\"TOTAL\":22s} runs:{total_runs:3d}  {\" \":18s}  cost:\$${total_cost:7.2f}  {\" \":10s}  tok:{total_tok:>9,}')\
-	" 2>/dev/null || echo "Nenhuma métrica ainda."
+	" 2>/dev/null || echo "No metrics yet."
 
-clean-logs:         ## 🗑️  Remove logs > 30 dias
-	@find ADWs/logs/ -name "*.log" -mtime +30 -delete 2>/dev/null; find ADWs/logs/ -name "*.jsonl" -mtime +30 -delete 2>/dev/null; echo "Logs antigos removidos."
+clean-logs:         ## 🗑️  Remove logs older than 30 days
+	@find ADWs/logs/ -name "*.log" -mtime +30 -delete 2>/dev/null; find ADWs/logs/ -name "*.jsonl" -mtime +30 -delete 2>/dev/null; echo "Old logs removed."
 
 # --- Docker (VPS) ---
 
-docker-up:          ## 🐳 Sobe scheduler + telegram em Docker
+docker-up:          ## 🐳 Start scheduler + telegram in Docker
 	docker compose up -d scheduler telegram
 
-docker-down:        ## 🐳 Para todos os containers
+docker-down:        ## 🐳 Stop all containers
 	docker compose down
 
-docker-logs:        ## 🐳 Logs dos containers
+docker-logs:        ## 🐳 Container logs
 	docker compose logs -f --tail=50
 
-docker-run:         ## 🐳 Roda rotina manualmente (ex: make docker-run ADW=good_morning.py)
+docker-run:         ## 🐳 Run routine manually (ex: make docker-run ADW=good_morning.py)
 	docker compose run --rm runner ADWs/rotinas/$(ADW)
 
-docker-build:       ## 🐳 Build da imagem
+docker-build:       ## 🐳 Build the image
 	docker compose build
 
-help:               ## 📖 Mostra este help
+help:               ## 📖 Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' Makefile | sort | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: morning sync triage review memory eod dashboard youtube instagram linkedin social fin-pulse licensing weekly health trends linear community community-week community-month github faq strategy fin-weekly licensing-weekly fin-close licensing-month daily scheduler social-auth telegram telegram-stop telegram-attach logs logs-detail logs-tail metrics clean-logs docker-up docker-down docker-logs docker-run docker-build help

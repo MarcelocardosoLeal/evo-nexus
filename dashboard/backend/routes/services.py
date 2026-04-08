@@ -22,21 +22,21 @@ def list_services():
         {
             "id": "scheduler",
             "name": "Scheduler",
-            "description": "Rotinas automatizadas (diárias, semanais, mensais)",
+            "description": "Automated routines (daily, weekly, monthly)",
             "command": "make scheduler",
             **_check_process("ps aux | grep '[s]cheduler.py' | grep -v grep"),
         },
         {
             "id": "telegram",
             "name": "Telegram Bot",
-            "description": "Bot Telegram — recebe e responde mensagens via Claude",
+            "description": "Telegram Bot — receives and responds to messages via Claude",
             "command": "make telegram",
             **_check_process("screen -list 2>/dev/null | grep telegram"),
         },
         {
             "id": "dashboard",
             "name": "Dashboard App",
-            "description": "Este dashboard (React + Flask)",
+            "description": "This dashboard (React + Flask)",
             "command": "make dashboard-app",
             **_check_process("ps aux | grep '[a]pp.py' | grep dashboard"),
         },
@@ -96,7 +96,7 @@ ROUTINE_SCRIPTS = {
 
 @bp.route("/api/routines/<routine_id>/run", methods=["POST"])
 def run_routine(routine_id):
-    """Manually trigger a routine."""
+    """Manually trigger a routine execution."""
     script = ROUTINE_SCRIPTS.get(routine_id)
     if not script:
         # Try matching by script name

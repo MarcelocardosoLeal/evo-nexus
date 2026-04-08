@@ -27,7 +27,7 @@ def connect():
     env = read_env()
     app_id = env.get("META_APP_ID", "")
     if not app_id:
-        return _missing("META_APP_ID e META_APP_SECRET")
+        return _missing("META_APP_ID and META_APP_SECRET")
 
     state = secrets.token_urlsafe(32)
     session["oauth_state_instagram"] = state
@@ -97,7 +97,7 @@ def callback():
         ig = page.get("instagram_business_account", {})
         if ig.get("id"):
             idx = next_index("instagram")
-            label = ig.get("username", page.get("name", f"Conta {idx}"))
+            label = ig.get("username", page.get("name", f"Account {idx}"))
             fields = {
                 "ACCESS_TOKEN": long_token,
                 "ACCOUNT_ID": ig["id"],
@@ -118,15 +118,15 @@ def callback():
             "TOKEN_CREATED_AT": now,
         })
 
-    return redirect(f"/?saved=Instagram ({saved_count} conta{'s' if saved_count != 1 else ''})")
+    return redirect(f"/?saved=Instagram ({saved_count} account{'s' if saved_count != 1 else ''})")
 
 
 def _missing(keys):
     return f"""
     <html><body style="background:#0C111D;color:#F9FAFB;font-family:Inter,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;">
     <div style="background:#182230;border:1px solid #344054;border-radius:12px;padding:40px;max-width:500px;">
-        <h2 style="color:#F04438;">Configuração necessária</h2>
-        <p style="color:#D0D5DD;">Configure <code>{keys}</code> no <code>.env</code></p>
-        <a href="/" style="color:#00FFA7;">Voltar</a>
+        <h2 style="color:#F04438;">Configuration required</h2>
+        <p style="color:#D0D5DD;">Configure <code>{keys}</code> in <code>.env</code></p>
+        <a href="/" style="color:#00FFA7;">Back</a>
     </div></body></html>
     """

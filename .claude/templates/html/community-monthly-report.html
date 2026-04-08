@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relatório Mensal da Comunidade — Evolution Foundation</title>
+<title>Community Monthly Report — Evolution Foundation</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -88,7 +88,7 @@
 <div class="header">
   <div class="header-left">
     <h1><span>Community</span> Monthly Report</h1>
-    <div class="subtitle">{{MES_REFERENCIA}} — Discord + WhatsApp — Relatório mensal</div>
+    <div class="subtitle">{{MES_REFERENCIA}} — Discord + WhatsApp — Monthly report</div>
   </div>
   <div class="header-right">
     <span class="badge {{SAUDE_CLASS}}">{{SAUDE_LABEL}}</span>
@@ -98,48 +98,48 @@
 <div class="container">
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- KPIs DO MÊS                                    -->
+  <!-- MONTH KPIs                                    -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="grid-4">
     <div class="metric-card">
       <div class="label">MAM (Monthly Active Members)</div>
       <div class="value">{{MAM_VALOR}}</div>
-      <div class="delta {{MAM_DELTA_CLASS}}">{{MAM_DELTA}} vs mês anterior</div>
+      <div class="delta {{MAM_DELTA_CLASS}}">{{MAM_DELTA}} vs previous month</div>
     </div>
     <div class="metric-card">
-      <div class="label">Total Mensagens</div>
+      <div class="label">Total Messages</div>
       <div class="value">{{MSGS_TOTAL}}</div>
-      <div class="delta {{MSGS_DELTA_CLASS}}">{{MSGS_DELTA}} vs mês anterior</div>
+      <div class="delta {{MSGS_DELTA_CLASS}}">{{MSGS_DELTA}} vs previous month</div>
     </div>
     <div class="metric-card">
-      <div class="label">Novos Membros</div>
+      <div class="label">New Members</div>
       <div class="value">{{NOVOS_MEMBROS}}</div>
-      <div class="delta {{NOVOS_DELTA_CLASS}}">{{NOVOS_DELTA}} vs mês anterior</div>
+      <div class="delta {{NOVOS_DELTA_CLASS}}">{{NOVOS_DELTA}} vs previous month</div>
     </div>
     <div class="metric-card">
-      <div class="label">Taxa de Resolução</div>
+      <div class="label">Resolution Rate</div>
       <div class="value">{{TAXA_RESOLUCAO}}</div>
-      <div class="delta {{RESOLUCAO_DELTA_CLASS}}">{{RESOLUCAO_DELTA}} vs mês anterior</div>
+      <div class="delta {{RESOLUCAO_DELTA_CLASS}}">{{RESOLUCAO_DELTA}} vs previous month</div>
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- EVOLUÇÃO SEMANAL (4 semanas)                   -->
+  <!-- WEEKLY EVOLUTION (4 weeks)                   -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Evolução Semanal</h2>
+      <h2>Weekly Evolution</h2>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Semana</th>
-            <th class="right">Mensagens</th>
-            <th class="right">Ativos</th>
-            <th class="right">Novos</th>
-            <th class="right">Sentimento</th>
-            <th class="right">Suporte Aberto</th>
+            <th>Week</th>
+            <th class="right">Messages</th>
+            <th class="right">Active</th>
+            <th class="right">New</th>
+            <th class="right">Sentiment</th>
+            <th class="right">Open Support</th>
           </tr>
         </thead>
         <tbody>
@@ -161,19 +161,19 @@
       </div>
       <div class="section-body">
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{DISCORD_MSGS_DOT}}"></span>Mensagens</div>
+          <div class="mr-label"><span class="status-dot {{DISCORD_MSGS_DOT}}"></span>Messages</div>
           <div class="mr-value">{{DISCORD_MSGS}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{DISCORD_ATIVOS_DOT}}"></span>Membros Ativos</div>
+          <div class="mr-label"><span class="status-dot {{DISCORD_ATIVOS_DOT}}"></span>Active Members</div>
           <div class="mr-value">{{DISCORD_ATIVOS}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{DISCORD_HELP_DOT}}"></span>Tickets Suporte</div>
+          <div class="mr-label"><span class="status-dot {{DISCORD_HELP_DOT}}"></span>Support Tickets</div>
           <div class="mr-value">{{DISCORD_HELP}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{DISCORD_SENTIMENTO_DOT}}"></span>Sentimento</div>
+          <div class="mr-label"><span class="status-dot {{DISCORD_SENTIMENTO_DOT}}"></span>Sentiment</div>
           <div class="mr-value">{{DISCORD_SENTIMENTO}}</div>
         </div>
       </div>
@@ -187,19 +187,19 @@
       </div>
       <div class="section-body">
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{WA_MSGS_DOT}}"></span>Mensagens</div>
+          <div class="mr-label"><span class="status-dot {{WA_MSGS_DOT}}"></span>Messages</div>
           <div class="mr-value">{{WA_MSGS}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{WA_GRUPOS_DOT}}"></span>Grupos Ativos</div>
+          <div class="mr-label"><span class="status-dot {{WA_GRUPOS_DOT}}"></span>Active Groups</div>
           <div class="mr-value">{{WA_GRUPOS}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{WA_PARTICIPANTES_DOT}}"></span>Participantes Únicos</div>
+          <div class="mr-label"><span class="status-dot {{WA_PARTICIPANTES_DOT}}"></span>Unique Participants</div>
           <div class="mr-value">{{WA_PARTICIPANTES}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{WA_SENTIMENTO_DOT}}"></span>Sentimento</div>
+          <div class="mr-label"><span class="status-dot {{WA_SENTIMENTO_DOT}}"></span>Sentiment</div>
           <div class="mr-value">{{WA_SENTIMENTO}}</div>
         </div>
       </div>
@@ -207,22 +207,22 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- TOP CONTRIBUIDORES                             -->
+  <!-- TOP CONTRIBUTORS                             -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Top Contribuidores do Mês</h2>
+      <h2>Top Contributors of the Month</h2>
       <span class="count">{{TOP_COUNT}}</span>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Membro</th>
-            <th>Plataforma</th>
-            <th class="right">Mensagens</th>
-            <th class="right">Respostas Dadas</th>
-            <th>Destaque</th>
+            <th>Member</th>
+            <th>Platform</th>
+            <th class="right">Messages</th>
+            <th class="right">Answers Given</th>
+            <th>Highlight</th>
           </tr>
         </thead>
         <tbody>
@@ -233,11 +233,11 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- TÓPICOS DO MÊS                                -->
+  <!-- MONTH TOPICS                                -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Tópicos Mais Discutidos</h2>
+      <h2>Most Discussed Topics</h2>
     </div>
     <div class="section-body">
       {{TOPICOS_ROWS}}
@@ -245,12 +245,12 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- INSIGHTS PRODUTO                               -->
+  <!-- PRODUCT INSIGHTS                               -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="two-col">
     <div class="section">
       <div class="section-header">
-        <h2>Features Solicitadas</h2>
+        <h2>Requested Features</h2>
         <span class="count">{{FEATURES_COUNT}}</span>
       </div>
       <div class="section-body">
@@ -260,7 +260,7 @@
 
     <div class="section">
       <div class="section-header">
-        <h2>Bugs Reportados</h2>
+        <h2>Reported Bugs</h2>
         <span class="count">{{BUGS_COUNT}}</span>
       </div>
       <div class="section-body">
@@ -274,17 +274,17 @@
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Docs Gaps — Perguntas Recorrentes sem Documentação</h2>
+      <h2>Docs Gaps — Recurring Questions without Documentation</h2>
       <span class="count">{{DOCS_GAPS_COUNT}}</span>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Pergunta</th>
-            <th>Fonte</th>
-            <th class="right">Frequência</th>
-            <th>Categoria</th>
+            <th>Question</th>
+            <th>Source</th>
+            <th class="right">Frequency</th>
+            <th>Category</th>
           </tr>
         </thead>
         <tbody>
@@ -295,21 +295,21 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- SENTIMENTO — TENDÊNCIA MENSAL                  -->
+  <!-- SENTIMENT — MONTHLY TREND                  -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Tendência de Sentimento</h2>
+      <h2>Sentiment Trend</h2>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Semana</th>
-            <th class="right">Positivo</th>
-            <th class="right">Neutro</th>
-            <th class="right">Negativo</th>
-            <th>Tendência</th>
+            <th>Week</th>
+            <th class="right">Positive</th>
+            <th class="right">Neutral</th>
+            <th class="right">Negative</th>
+            <th>Trend</th>
           </tr>
         </thead>
         <tbody>
@@ -320,15 +320,15 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- ANÁLISE & RECOMENDAÇÕES                        -->
+  <!-- ANALYSIS & RECOMMENDATIONS                        -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="highlight-card">
-    <div class="title">Análise do Mês</div>
+    <div class="title">Month Analysis</div>
     <div class="body">{{ANALISE_MES}}</div>
   </div>
 
   <div class="highlight-card">
-    <div class="title">Recomendações</div>
+    <div class="title">Recommendations</div>
     <div class="body">{{RECOMENDACOES}}</div>
   </div>
 
@@ -336,7 +336,7 @@
 
 <!-- FOOTER -->
 <div class="footer">
-  Gerado automaticamente por <span>Evolution Foundation</span> — Agente Pulse — {{TIMESTAMP}}
+  Automatically generated by <span>Evolution Foundation</span> — Agent Pulse — {{TIMESTAMP}}
 </div>
 
 </body>

@@ -59,7 +59,7 @@ def api_call(endpoint: str, call: str, params: list) -> dict:
         return {"error": str(e)}
 
 
-# ── Clientes ──────────────────────────────────────────────
+# ── Clients ──────────────────────────────────────────────
 
 def clientes_listar(pagina=1, por_pagina=20):
     data = api_call("geral/clientes", "ListarClientesResumido", [
@@ -87,7 +87,7 @@ def clientes_detalhar(codigo: int):
     return data
 
 
-# ── Produtos ──────────────────────────────────────────────
+# ── Products ──────────────────────────────────────────────
 
 def produtos_listar(pagina=1, por_pagina=20):
     data = api_call("geral/produtos", "ListarProdutosResumido", [
@@ -103,7 +103,7 @@ def produtos_detalhar(codigo: int):
     return data
 
 
-# ── Pedidos de Venda ──────────────────────────────────────
+# ── Sales Orders ──────────────────────────────────────
 
 def pedidos_listar(pagina=1, por_pagina=20):
     data = api_call("produtos/pedido", "ListarPedidos", [
@@ -126,7 +126,7 @@ def pedidos_status(numero: int):
     return data
 
 
-# ── Financeiro ────────────────────────────────────────────
+# ── Financials ────────────────────────────────────────────
 
 def contas_receber(pagina=1, por_pagina=20):
     data = api_call("financas/contareceber", "ListarContasReceber", [
@@ -150,7 +150,7 @@ def resumo_financeiro():
     return {"data": hoje, "resumo": data}
 
 
-# ── Notas Fiscais ─────────────────────────────────────────
+# ── Invoices ─────────────────────────────────────────
 
 def nfe_listar(pagina=1, por_pagina=20):
     data = api_call("produtos/nfconsultar", "ListarNF", [
@@ -166,7 +166,7 @@ def nfe_detalhar(numero: int):
     return data
 
 
-# ── Estoque ───────────────────────────────────────────────
+# ── Stock ───────────────────────────────────────────────
 
 def estoque_posicao(pagina=1, por_pagina=20):
     from datetime import datetime as _dt

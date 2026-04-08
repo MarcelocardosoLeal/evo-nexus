@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADW: Social Analytics — Relatório consolidado cross-platform via Pixel"""
+"""ADW: Social Analytics — Consolidated cross-platform report via Pixel"""
 
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -15,4 +15,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n⚠ Cancelado.")
+        print("\n⚠ Cancelled.")

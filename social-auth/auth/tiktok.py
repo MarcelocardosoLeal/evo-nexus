@@ -17,7 +17,7 @@ def connect():
     env = read_env()
     client_key = env.get("TIKTOK_CLIENT_KEY", "")
     if not client_key:
-        return _missing("TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET")
+        return _missing("TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET")
 
     callback_url = env.get("TIKTOK_CALLBACK_URL", "http://localhost:8765/callback/tiktok")
     state = secrets.token_urlsafe(32)
@@ -82,9 +82,9 @@ def _missing(keys):
     return f"""
     <html><body style="background:#0C111D;color:#F9FAFB;font-family:Inter,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;">
     <div style="background:#182230;border:1px solid #344054;border-radius:12px;padding:40px;max-width:500px;">
-        <h2 style="color:#F04438;">Configuração necessária</h2>
-        <p style="color:#D0D5DD;">Configure <code>{keys}</code> no <code>.env</code></p>
-        <p style="color:#F79009;font-size:13px;margin-top:12px;">TikTok exige HTTPS callback. Configure <code>TIKTOK_CALLBACK_URL</code> com URL do ngrok.</p>
-        <a href="/" style="color:#00FFA7;">Voltar</a>
+        <h2 style="color:#F04438;">Configuration required</h2>
+        <p style="color:#D0D5DD;">Configure <code>{keys}</code> in <code>.env</code></p>
+        <p style="color:#F79009;font-size:13px;margin-top:12px;">TikTok requires HTTPS callback. Configure <code>TIKTOK_CALLBACK_URL</code> with ngrok URL.</p>
+        <a href="/" style="color:#00FFA7;">Back</a>
     </div></body></html>
     """

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Core runner para ADWs — executa Claude Code CLI com agentes, output visual, logs e notificação Telegram.
+Core runner for ADWs — executes Claude Code CLI with agents, visual output, logs and Telegram notification.
 """
 
 import subprocess
@@ -34,7 +34,7 @@ def _timestamp():
 
 
 def _parse_usage(json_result: dict) -> dict:
-    """Extrai dados de tokens e custo do JSON result do Claude CLI."""
+    """Extract token and cost data from Claude CLI JSON result."""
     usage = json_result.get("usage", {})
     return {
         "input_tokens": usage.get("input_tokens", 0),
@@ -46,7 +46,7 @@ def _parse_usage(json_result: dict) -> dict:
 
 
 def _save_metrics(log_name, duration, returncode, agent, stdout, usage=None):
-    """Salva métricas acumuladas por rotina em metrics.json."""
+    """Save accumulated metrics per routine in metrics.json."""
     metrics_file = LOGS_DIR / "metrics.json"
     try:
         metrics = json.loads(metrics_file.read_text()) if metrics_file.exists() else {}
@@ -93,7 +93,7 @@ def _save_metrics(log_name, duration, returncode, agent, stdout, usage=None):
 
 
 def _log_to_file(log_name, prompt, stdout, stderr, returncode, duration, usage=None):
-    """Salva log estruturado em JSONL + arquivo detalhado."""
+    """Save structured log in JSONL + detailed file."""
     log_file = LOGS_DIR / f"{datetime.now().strftime('%Y-%m-%d')}.jsonl"
     entry = {
         "timestamp": datetime.now().isoformat(),
@@ -126,13 +126,13 @@ def _log_to_file(log_name, prompt, stdout, stderr, returncode, duration, usage=N
 
 def run_claude(prompt: str, log_name: str = "unnamed", timeout: int = 600, agent: str = None) -> dict:
     """
-    Executa Claude Code CLI com streaming de output.
+    Execute Claude Code CLI with streaming output.
 
     Args:
-        prompt: O prompt a executar
-        log_name: Nome para logs
-        timeout: Timeout em segundos
-        agent: Nome do agente (.claude/agents/*.md) — se None, roda sem agente
+        prompt: The prompt to execute
+        log_name: Name for logs
+        timeout: Timeout in seconds
+        agent: Agent name (.claude/agents/*.md) — if None, runs without agent
     """
     cmd = ["claude", "--print", "--dangerously-skip-permissions", "--output-format", "json"]
 
@@ -169,7 +169,7 @@ def run_claude(prompt: str, log_name: str = "unnamed", timeout: int = 600, agent
         stdout = "".join(stdout_lines)
         duration = (datetime.now() - start_time).total_seconds()
 
-        # Parse JSON output para extrair resultado e usage
+        # Parse JSON output to extract result and usage
         usage = None
         result_text = stdout
         try:
@@ -209,12 +209,12 @@ def run_claude(prompt: str, log_name: str = "unnamed", timeout: int = 600, agent
         duration = (datetime.now() - start_time).total_seconds()
         console.print(f"\r  [error]✗[/error] {log_name} [warning](timeout {timeout}s)[/warning]")
         _log_to_file(log_name, prompt, "", f"Timeout after {timeout}s", -1, duration)
-        return {"success": False, "stdout": "", "stderr": f"Timeout após {timeout}s", "returncode": -1, "duration": duration}
+        return {"success": False, "stdout": "", "stderr": f"Timeout after {timeout}s", "returncode": -1, "duration": duration}
 
     except KeyboardInterrupt:
         process.kill()
         duration = (datetime.now() - start_time).total_seconds()
-        console.print(f"\n  [warning]⚠ Cancelado pelo usuário[/warning]")
+        console.print(f"\n  [warning]⚠ Cancelled by user[/warning]")
         _log_to_file(log_name, prompt, "", "Cancelled by user", -2, duration)
         raise
 
@@ -226,8 +226,8 @@ def run_claude(prompt: str, log_name: str = "unnamed", timeout: int = 600, agent
 
 
 def run_skill(skill_name: str, args: str = "", log_name: str = None, timeout: int = 600, agent: str = None) -> dict:
-    """Executa uma skill via CLI, opcionalmente com um agente."""
-    prompt = f"Execute a skill /{skill_name} {args}".strip()
+    """Execute a skill via CLI, optionally with an agent."""
+    prompt = f"Execute the skill /{skill_name} {args}".strip()
     return run_claude(prompt, log_name or skill_name, timeout, agent=agent)
 
 
@@ -238,8 +238,8 @@ def banner(title: str, subtitle: str = "", color: str = "cyan"):
     console.print(Panel(content, border_style=color, padding=(0, 2)))
 
 
-def summary(results: list, title: str = "Concluído"):
-    """Mostra resumo final no terminal."""
+def summary(results: list, title: str = "Completed"):
+    """Show final summary in terminal."""
     total_duration = sum(r.get("duration", 0) for r in results)
     success = sum(1 for r in results if r.get("success"))
     failed = len(results) - success
@@ -250,7 +250,7 @@ def summary(results: list, title: str = "Concluído"):
         for r in results if r.get("usage")
     )
 
-    status = "[success]✅ Tudo OK[/success]" if failed == 0 else f"[warning]⚠ {failed} falha(s)[/warning]"
+    status = "[success]✅ All OK[/success]" if failed == 0 else f"[warning]⚠ {failed} failure(s)[/warning]"
     cost_line = f" | {total_tokens:,} tokens | ${total_cost:.2f}" if total_tokens > 0 else ""
     console.print(Panel(
         f"{status}\n[dim]Steps: {success}/{len(results)} | Tempo: {total_duration:.0f}s{cost_line}[/dim]",

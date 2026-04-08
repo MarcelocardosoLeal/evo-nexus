@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -141,14 +141,14 @@
 <div class="header">
   <div class="header-left">
     <h1><span>Evolution</span> Dashboard</h1>
-    <div class="subtitle">{{DATA_EXTENSO}} — Consolidação diária</div>
+    <div class="subtitle">{{DATA_EXTENSO}} — Daily consolidation</div>
   </div>
   <div class="header-right">
     <div class="health-badges">
-      <div class="health-badge {{PRODUTO_HEALTH}}"><div class="dot"></div>Produto</div>
-      <div class="health-badge {{COMUNIDADE_HEALTH}}"><div class="dot"></div>Comunidade</div>
-      <div class="health-badge {{FINANCEIRO_HEALTH}}"><div class="dot"></div>Financeiro</div>
-      <div class="health-badge {{ROTINAS_HEALTH}}"><div class="dot"></div>Rotinas</div>
+      <div class="health-badge {{PRODUTO_HEALTH}}"><div class="dot"></div>Product</div>
+      <div class="health-badge {{COMUNIDADE_HEALTH}}"><div class="dot"></div>Community</div>
+      <div class="health-badge {{FINANCEIRO_HEALTH}}"><div class="dot"></div>Financial</div>
+      <div class="health-badge {{ROTINAS_HEALTH}}"><div class="dot"></div>Routines</div>
     </div>
   </div>
 </div>
@@ -160,17 +160,17 @@
   <!-- ═══════════════════════════════════════════════ -->
   <div class="grid-4">
     <div class="metric-card">
-      <div class="label">Tarefas Pendentes</div>
+      <div class="label">Pending Tasks</div>
       <div class="value">{{TAREFAS_PENDENTES}}</div>
       <div class="delta {{TAREFAS_DELTA_CLASS}}">{{TAREFAS_DELTA}}</div>
     </div>
     <div class="metric-card">
-      <div class="label">PRs Abertos</div>
+      <div class="label">Open PRs</div>
       <div class="value">{{PRS_ABERTOS}}</div>
       <div class="delta {{PRS_DELTA_CLASS}}">{{PRS_DELTA}}</div>
     </div>
     <div class="metric-card">
-      <div class="label">Msgs Comunidade (24h)</div>
+      <div class="label">Community Msgs (24h)</div>
       <div class="value">{{MSGS_COMUNIDADE}}</div>
       <div class="delta {{MSGS_DELTA_CLASS}}">{{MSGS_DELTA}}</div>
     </div>
@@ -182,17 +182,17 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- ROW 2: AGENDA + TAREFAS PRIORITÁRIAS           -->
+  <!-- ROW 2: AGENDA + PRIORITY TASKS           -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="two-col">
     <!-- Agenda do Dia -->
     <div class="section">
       <div class="section-header">
-        <h2>Agenda Hoje</h2>
+        <h2>Today's Agenda</h2>
         <span class="count">{{AGENDA_COUNT}}</span>
       </div>
       <div class="section-body">
-        <!-- TEMPLATE: repetir para cada evento -->
+        <!-- TEMPLATE: repeat for each event -->
         {{AGENDA_ROWS}}
         <!-- /TEMPLATE -->
       </div>
@@ -201,11 +201,11 @@
     <!-- Tarefas Prioritárias -->
     <div class="section">
       <div class="section-header">
-        <h2>Tarefas Prioritárias</h2>
+        <h2>Priority Tasks</h2>
         <span class="count">{{TAREFAS_PRIO_COUNT}}</span>
       </div>
       <div class="section-body">
-        <!-- TEMPLATE: repetir para cada tarefa -->
+        <!-- TEMPLATE: repeat for each task -->
         {{TAREFAS_PRIO_ROWS}}
         <!-- /TEMPLATE -->
       </div>
@@ -224,7 +224,7 @@
       </div>
       <div class="section-body">
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{SPRINT_PROGRESS_DOT}}"></span>Progresso</div>
+          <div class="mr-label"><span class="status-dot {{SPRINT_PROGRESS_DOT}}"></span>Progress</div>
           <div class="mr-value">{{SPRINT_PROGRESS}}</div>
         </div>
         <div style="padding: 0 20px 14px;">
@@ -237,11 +237,11 @@
           <div class="mr-value">{{BLOCKERS_N}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{IN_REVIEW_DOT}}"></span>Em Review</div>
+          <div class="mr-label"><span class="status-dot {{IN_REVIEW_DOT}}"></span>In Review</div>
           <div class="mr-value">{{IN_REVIEW_N}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot green"></span>Concluídas</div>
+          <div class="mr-label"><span class="status-dot green"></span>Completed</div>
           <div class="mr-value">{{DONE_N}}</div>
         </div>
       </div>
@@ -255,7 +255,7 @@
       </div>
       <div class="section-body">
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{PRS_DOT}}"></span>PRs Abertos</div>
+          <div class="mr-label"><span class="status-dot {{PRS_DOT}}"></span>Open PRs</div>
           <div class="mr-value">{{GITHUB_PRS_ABERTOS}}</div>
         </div>
         <div class="metric-row">
@@ -275,13 +275,13 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- ROW 4: COMUNIDADE + FINANCEIRO                 -->
+  <!-- ROW 4: COMMUNITY + FINANCIAL                 -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="two-col">
     <!-- Comunidade -->
     <div class="section">
       <div class="section-header">
-        <h2>Comunidade</h2>
+        <h2>Community</h2>
         <span class="badge {{COMUNIDADE_STATUS_CLASS}}">{{COMUNIDADE_STATUS}}</span>
       </div>
       <div class="section-body">
@@ -290,11 +290,11 @@
           <div class="mr-value">{{WAM_VALOR}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{SENTIMENTO_DOT}}"></span>Sentimento</div>
+          <div class="mr-label"><span class="status-dot {{SENTIMENTO_DOT}}"></span>Sentiment</div>
           <div class="mr-value">{{SENTIMENTO_LABEL}}</div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{SUPORTE_DOT}}"></span>Tickets Suporte</div>
+          <div class="mr-label"><span class="status-dot {{SUPORTE_DOT}}"></span>Support Tickets</div>
           <div class="mr-value">{{SUPORTE_N}}</div>
         </div>
         <div class="metric-row">
@@ -307,7 +307,7 @@
     <!-- Financeiro -->
     <div class="section">
       <div class="section-header">
-        <h2>Financeiro</h2>
+        <h2>Financial</h2>
         <span class="badge {{FINANCEIRO_STATUS_CLASS}}">{{FINANCEIRO_STATUS}}</span>
       </div>
       <div class="section-body">
@@ -319,7 +319,7 @@
           </div>
         </div>
         <div class="metric-row">
-          <div class="mr-label"><span class="status-dot {{ASSINATURAS_DOT}}"></span>Assinaturas</div>
+          <div class="mr-label"><span class="status-dot {{ASSINATURAS_DOT}}"></span>Subscriptions</div>
           <div>
             <div class="mr-value">{{FIN_ASSINATURAS}}</div>
             <div style="font-size:12px;color:var(--text-muted);text-align:right;">{{FIN_ASSINATURAS_DELTA}}</div>
@@ -338,25 +338,25 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- ROW 5: REUNIÕES RECENTES                       -->
+  <!-- ROW 5: RECENT MEETINGS                       -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Reuniões Recentes</h2>
+      <h2>Recent Meetings</h2>
       <span class="count">{{REUNIOES_COUNT}}</span>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Data</th>
-            <th>Reunião</th>
-            <th>Participantes</th>
+            <th>Date</th>
+            <th>Meeting</th>
+            <th>Participants</th>
             <th>Action Items</th>
           </tr>
         </thead>
         <tbody>
-          <!-- TEMPLATE: repetir para cada reunião -->
+          <!-- TEMPLATE: repeat for each meeting -->
           {{REUNIOES_ROWS}}
           <!-- /TEMPLATE -->
         </tbody>
@@ -365,27 +365,27 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- ROW 6: ROTINAS ADW — STATUS & MÉTRICAS         -->
+  <!-- ROW 6: ADW ROUTINES — STATUS & METRICS         -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
-      <h2>Rotinas Automatizadas</h2>
+      <h2>Automated Routines</h2>
       <span class="badge {{ROTINAS_STATUS_CLASS}}">{{ROTINAS_STATUS}}</span>
     </div>
     <div class="section-body">
       <table>
         <thead>
           <tr>
-            <th>Rotina</th>
-            <th>Agente</th>
-            <th>Última Execução</th>
-            <th>Duração Média</th>
-            <th>Taxa Sucesso</th>
+            <th>Routine</th>
+            <th>Agent</th>
+            <th>Last Execution</th>
+            <th>Average Duration</th>
+            <th>Success Rate</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
-          <!-- TEMPLATE: repetir para cada rotina — ler ADWs/logs/metrics.json -->
+          <!-- TEMPLATE: repeat for each routine — read ADWs/logs/metrics.json -->
           {{ROTINAS_ROWS}}
           <!-- /TEMPLATE -->
         </tbody>
@@ -394,10 +394,10 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- ROW 7: ALERTAS & ATENÇÃO                       -->
+  <!-- ROW 7: ALERTS & ATTENTION                       -->
   <!-- ═══════════════════════════════════════════════ -->
   <div class="highlight-card">
-    <div class="title">Pontos de Atenção</div>
+    <div class="title">Points of Attention</div>
     <div class="body">{{PONTOS_ATENCAO}}</div>
   </div>
 
@@ -405,7 +405,7 @@
 
 <!-- FOOTER -->
 <div class="footer">
-  Gerado automaticamente por <span>Evolution Foundation</span> — Agente Clawdia — {{TIMESTAMP}}
+  Automatically generated by <span>Evolution Foundation</span> — Agent Clawdia — {{TIMESTAMP}}
 </div>
 
 </body>

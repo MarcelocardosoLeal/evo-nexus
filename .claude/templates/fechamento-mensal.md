@@ -1,42 +1,42 @@
 ---
 author: claude
-type: fechamento-mensal
+type: monthly-close
 date: {{YYYY-MM-DD}}
-periodo: {{YYYY-MM}}
+period: {{YYYY-MM}}
 ---
 
-# Fechamento Financeiro — {{Mês}} {{YYYY}}
+# Financial Close — {{Month}} {{YYYY}}
 
-## Resumo executivo
-{{1-2 frases sobre a saúde financeira do mês}}
+## Executive Summary
+{{1-2 sentences about the month's financial health}}
 
-## Receita
+## Revenue
 
-| Fonte | Valor | Variação vs mês anterior |
-|-------|-------|--------------------------|
-| {{fonte}} | R$ {{valor}} | {{+/-X%}} |
-| **Total Bruto** | **R$ {{total}}** | **{{var%}}** |
-| Reembolsos | -R$ {{valor}} | |
-| **Total Líquido** | **R$ {{total}}** | **{{var%}}** |
+| Source | Amount | Change vs Previous Month |
+|--------|--------|--------------------------|
+| {{source}} | R$ {{amount}} | {{+/-X%}} |
+| **Gross Total** | **R$ {{total}}** | **{{var%}}** |
+| Refunds | -R$ {{amount}} | |
+| **Net Total** | **R$ {{total}}** | **{{var%}}** |
 
-## Despesas
+## Expenses
 
-| Categoria | Valor | Variação |
-|-----------|-------|----------|
-| {{categoria}} | R$ {{valor}} | {{+/-X%}} |
+| Category | Amount | Change |
+|----------|--------|--------|
+| {{category}} | R$ {{amount}} | {{+/-X%}} |
 | **Total** | **R$ {{total}}** | **{{var%}}** |
 
-## Métricas SaaS
+## SaaS Metrics
 
-| Métrica | Valor | Variação |
-|---------|-------|----------|
-| MRR | R$ {{valor}} | {{var%}} |
-| ARR | R$ {{valor}} | {{var%}} |
-| Burn Rate | R$ {{valor}}/mês | |
-| Runway | {{N}} meses | |
+| Metric | Value | Change |
+|--------|-------|--------|
+| MRR | R$ {{value}} | {{var%}} |
+| ARR | R$ {{value}} | {{var%}} |
+| Burn Rate | R$ {{value}}/month | |
+| Runway | {{N}} months | |
 
-## Alertas
-- {{anomalias ou desvios >10%}}
+## Alerts
+- {{anomalies or deviations >10%}}
 
-## Próximos passos
-- {{ações recomendadas}}
+## Next Steps
+- {{recommended actions}}

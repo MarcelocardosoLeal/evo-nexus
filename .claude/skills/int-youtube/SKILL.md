@@ -5,11 +5,11 @@ description: "Query YouTube Data API v3 — channel stats, recent videos, top vi
 
 # YouTube Data API v3
 
-Integração com YouTube para monitorar canais da Evolution e outros. Suporta múltiplas contas via OAuth (Social Auth App) ou API Key.
+YouTube integration to monitor Evolution channels and others. Supports multiple accounts via OAuth (Social Auth App) or API Key.
 
 ## Setup
 
-Contas configuradas via `make social-auth` (OAuth login) ou manualmente no `.env`:
+Accounts configured via `make social-auth` (OAuth login) or manually in `.env`:
 ```env
 SOCIAL_YOUTUBE_1_LABEL=Evolution API
 SOCIAL_YOUTUBE_1_ACCESS_TOKEN=ya29...
@@ -23,28 +23,28 @@ SOCIAL_YOUTUBE_1_REFRESH_TOKEN=1//0h...
 python3 {project-root}/.claude/skills/int-youtube/scripts/youtube_client.py <command> [args]
 ```
 
-### Comandos
+### Commands
 
 ```bash
-# Listar contas configuradas
+# List configured accounts
 youtube_client.py accounts
 
-# Stats do canal (inscritos, views, total vídeos)
+# Channel stats (subscribers, views, total videos)
 youtube_client.py channel_stats [account_label_or_index]
 
-# Últimos N vídeos com métricas (via playlistItems — 3 units)
+# Last N videos with metrics (via playlistItems — 3 units)
 youtube_client.py recent_videos [account] [N]
 
-# Top N vídeos por views
+# Top N videos by views
 youtube_client.py top_videos [account] [N]
 
-# Stats de vídeos específicos
+# Stats for specific videos
 youtube_client.py video_stats VIDEO_ID [VIDEO_ID...]
 
-# Comentários de um vídeo
+# Comments on a video
 youtube_client.py comments VIDEO_ID [N]
 
-# Resumo de todas as contas
+# Summary of all accounts
 youtube_client.py summary
 ```
 
@@ -71,16 +71,16 @@ youtube_client.py summary
 }
 ```
 
-## Métricas-chave
-- Inscritos (delta diário/semanal/mensal)
-- Views total e por vídeo
+## Key metrics
+- Subscribers (daily/weekly/monthly delta)
+- Total views and per video
 - Engagement rate: (likes + comments) / views
-- Melhor vídeo do período
-- Frequência de publicação
-- Comentários recentes (sentimento)
+- Best video of the period
+- Publishing frequency
+- Recent comments (sentiment)
 
 ## Quota
-- 10.000 units/dia (reset meia-noite Pacific Time)
-- `playlistItems`: 1 unit (usado em vez de `search` que custa 100)
-- `channels`, `videos`, `commentThreads`: 1 unit cada
-- Cada paginação cobra novamente
+- 10,000 units/day (resets at midnight Pacific Time)
+- `playlistItems`: 1 unit (used instead of `search` which costs 100)
+- `channels`, `videos`, `commentThreads`: 1 unit each
+- Each pagination is charged again

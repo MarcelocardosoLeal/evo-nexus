@@ -1,5 +1,5 @@
 services:
-  # Scheduler — roda todas as rotinas automatizadas
+  # Scheduler — runs all automated routines
   scheduler:
     build: .
     container_name: openclaude-scheduler
@@ -26,7 +26,7 @@ services:
       timeout: 10s
       retries: 3
 
-  # Telegram — bot que escuta mensagens
+  # Telegram — bot that listens for messages
   telegram:
     build: .
     container_name: openclaude-telegram
@@ -51,8 +51,8 @@ services:
     stdin_open: true
     tty: true
 
-  # Runner on-demand — para executar rotinas manualmente
-  # Uso: docker compose run --rm runner ADWs/rotinas/good_morning.py
+  # Runner on-demand — to execute routines manually
+  # Usage: docker compose run --rm runner ADWs/rotinas/good_morning.py
   runner:
     build: .
     container_name: openclaude-runner
