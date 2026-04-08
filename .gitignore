@@ -9,18 +9,27 @@
 .claude/.env
 
 # ── Personal workspace data ───────────────
-# These folders contain user-specific data (logs, reports, finance, health, etc.)
-# The folder STRUCTURE is defined by setup, but contents are private.
-01 Daily Logs/
-02 Projects/
-03 Comunidade/
-04 Redes Sociais/
-05 Financeiro/
-06 Pessoal/
-07 Reuniões/
-08 Cursos/
-09 Estrategia/
-09 Reuniões/
+# Track folder structure (.gitkeep) but ignore all content inside.
+01 Daily Logs/*
+!01 Daily Logs/.gitkeep
+02 Projects/*
+!02 Projects/.gitkeep
+03 Comunidade/*
+!03 Comunidade/.gitkeep
+04 Redes Sociais/*
+!04 Redes Sociais/.gitkeep
+05 Financeiro/*
+!05 Financeiro/.gitkeep
+06 Pessoal/*
+!06 Pessoal/.gitkeep
+07 Reuniões/*
+!07 Reuniões/.gitkeep
+08 Cursos/*
+!08 Cursos/.gitkeep
+09 Estrategia/*
+!09 Estrategia/.gitkeep
+09 Reuniões/*
+!09 Reuniões/.gitkeep
 
 # ── Agent memory (runtime, personal) ──────
 .claude/agent-memory/
