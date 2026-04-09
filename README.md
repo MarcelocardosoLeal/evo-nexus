@@ -51,6 +51,7 @@ It turns a single Claude Code installation into a team of 9 specialized agents �
 - **18 Integrations** — Google Calendar, Gmail, Linear, GitHub, Discord, Telegram, Stripe, Omie, Fathom, Todoist, YouTube, Instagram, LinkedIn, and more
 - **2 core + custom HTML report templates** — dark-themed dashboards for every domain
 - **Persistent Memory** — two-tier system (CLAUDE.md + memory/) across sessions
+- **Knowledge Base** — optional semantic search via [MemPalace](https://github.com/milla-jovovich/mempalace) (local ChromaDB vectors, one-click install)
 - **Full Observability** — JSONL logs, execution metrics, cost tracking per routine
 
 ---
@@ -206,6 +207,7 @@ A full web UI at `http://localhost:8080`:
 | **Templates** | Preview HTML report templates |
 | **Services** | Start/stop scheduler, Telegram bot with live logs |
 | **Memory** | Browse agent and global memory files |
+| **Knowledge** | Semantic search via [MemPalace](https://github.com/milla-jovovich/mempalace) — index code, docs, and knowledge |
 | **Integrations** | Status of all connected services + OAuth setup |
 | **Chat** | Embedded Claude Code terminal (xterm.js + WebSocket) |
 | **Users** | User management with roles (admin, operator, viewer) |

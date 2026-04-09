@@ -66,6 +66,10 @@ A web UI (React + Flask) for managing everything: view reports, start/stop servi
 
 ![Web Dashboard](imgs/doc-overview.png)
 
+### Knowledge Base
+
+Optional semantic search powered by [MemPalace](https://github.com/milla-jovovich/mempalace). Index your project code, documentation, and knowledge for natural-language search — everything runs locally with ChromaDB. Enable it with one click in the Dashboard.
+
 ### Memory
 
 Two-tier persistence. `CLAUDE.md` holds working memory (who you are, active projects, key people). The `memory/` directory stores deeper context (people profiles, glossary, project history). Both survive across sessions.

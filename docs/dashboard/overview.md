@@ -97,6 +97,10 @@ Browse the two-tier memory system:
 - **memory/** -- detailed files (people, projects, glossary, trends)
 - **Agent memory** -- per-agent context in `.claude/agent-memory/`
 
+### Knowledge Base
+
+Optional semantic search powered by [MemPalace](https://github.com/milla-jovovich/mempalace). Enable it with one click, add directories (code, docs, notes) as sources, index them, and search by meaning -- not just keywords. Everything runs locally using ChromaDB vectors. See [knowledge-base.md](knowledge-base.md) for details.
+
 ### Integrations
 
 Status board for all 18 integrations. Shows which are connected (green), which need configuration (yellow), and which are disabled. Social media accounts (YouTube, Instagram, LinkedIn) can be connected via OAuth directly from this page.

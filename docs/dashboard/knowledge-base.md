@@ -1,6 +1,8 @@
 # Knowledge Base (MemPalace)
 
-The Knowledge Base page provides semantic search over your code, documentation, and project knowledge. It is powered by [MemPalace](https://github.com/milla-jovovich/mempalace), an open-source local memory system that indexes content into a searchable vector database.
+The Knowledge Base page provides semantic search over your code, documentation, and project knowledge. It is powered by **[MemPalace](https://github.com/milla-jovovich/mempalace)**, an open-source local memory system that indexes content into a searchable vector database.
+
+> **GitHub:** [github.com/milla-jovovich/mempalace](https://github.com/milla-jovovich/mempalace) — MIT License, 27k+ stars
 
 Everything runs locally — no external APIs, no data leaves your machine.
 
