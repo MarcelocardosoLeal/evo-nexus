@@ -96,13 +96,38 @@ You can edit credentials through:
 - Directly in the terminal: `nano .env`
 
 See individual integration guides for setup steps:
-- [Discord](discord.md)
-- [Stripe](stripe.md)
-- [GitHub](github.md)
-- [Google Calendar + Gmail](google.md)
-- [Evolution API](evolution-api.md)
-- [Evolution Go](evolution-go.md)
-- [Evo CRM](evo-crm.md)
+
+**Financial & ERP:**
+- [Stripe](stripe.md) -- MRR, charges, subscriptions, churn
+- [Omie](omie.md) -- Brazilian ERP: clients, invoices, financials, stock
+
+**Meetings & Tasks:**
+- [Fathom](fathom.md) -- Meeting recordings, transcripts, action items
+- [Todoist](todoist.md) -- Task management via CLI
+
+**Messaging:**
+- [Telegram](telegram.md) -- Bot messaging and notifications via MCP
+- [WhatsApp](whatsapp.md) -- Group messages via Evolution Foundation API
+- [Discord](discord.md) -- Community channels and messages
+
+**Social Media:**
+- [YouTube](youtube.md) -- Channel stats, videos, engagement (OAuth)
+- [Instagram](instagram.md) -- Profile, posts, engagement (Graph API + OAuth)
+- [LinkedIn](linkedin.md) -- Profile and org stats (OAuth)
+
+**Development:**
+- [GitHub](github.md) -- PRs, issues, releases via MCP + CLI
+- [Linear](linear.md) -- Issues, sprints, project tracking via MCP
+- [Licensing](licensing.md) -- Open source telemetry and growth metrics
+
+**Productivity:**
+- [Google Calendar + Gmail](google.md) -- Agenda, scheduling, email triage
+- [Obsidian](obsidian.md) -- Vault management, notes, search via CLI
+
+**Evolution Platform:**
+- [Evolution API](evolution-api.md) -- WhatsApp instances and messaging
+- [Evolution Go](evolution-go.md) -- Evolution Go instances
+- [Evo CRM](evo-crm.md) -- CRM contacts, conversations, pipelines
 
 ## Multi-Account Support
 

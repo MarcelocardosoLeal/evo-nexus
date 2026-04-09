@@ -2089,6 +2089,74 @@ Both share the same API patterns. You can use either or both depending on your n
 
 ---
 
+# Fathom Integration
+
+Fathom records and transcribes meetings, providing summaries, transcripts, and action items. The @clawdia agent uses Fathom to keep track of discussions, decisions, and follow-ups across all calls.
+
+## Setup
+
+### 1. Get Your API Key
+
+1. Go to [fathom.video](https://fathom.video)
+2. Navigate to **Settings > API**
+3. Copy your API key (requires Fathom Team or Enterprise plan)
+
+### 2. Configure .env
+
+```env
+FATHOM_API_KEY=your_api_key_here
+```
+
+### 3. Test the Connection
+
+```bash
+make sync
+```
+
+This fetches recent meetings from Fathom, saves transcripts and summaries locally, and updates the meeting index.
+
+## Available Commands
+
+The `int-fathom` skill queries the Fathom API via a shell script:
+
+| Command | What it does |
+|---|---|
+| `meetings` | List recent meetings |
+| `meetings --include-summary` | List meetings with AI summaries |
+| `meetings --include-actions` | List meetings with action items |
+| `meetings --include-transcript` | List meetings with full transcripts |
+| `meetings --after DATE --before DATE` | Filter by date range |
+| `meetings --recorded-by EMAIL` | Filter by recorder |
+| `meetings --team NAME` | Filter by team |
+| `summary RECORDING_ID` | Get summary for a specific recording |
+| `transcript RECORDING_ID` | Get transcript for a specific recording |
+| `teams` | List teams |
+| `members` | List team members |
+
+## Key Data Points
+
+- Meeting title, date, duration, and participants
+- AI-generated summaries (markdown formatted)
+- Action items with assignees
+- Full transcripts with speaker labels
+- Team and participant filtering
+
+## Skills That Use Fathom
+
+| Skill | What it does |
+|---|---|
+| `int-fathom` | Direct Fathom API queries -- meetings, summaries, transcripts |
+| `int-sync-meetings` | Full sync pipeline -- fetch, deduplicate, save, and index meetings |
+
+## Automated Routines
+
+| Routine | Schedule | Make command |
+|---|---|---|
+| Sync Meetings | Every 30 min | `make sync` |
+
+
+---
+
 # GitHub Integration
 
 GitHub is connected via both **MCP server** (for Claude Code sessions) and **CLI** (`gh` command, for automated routines). The @atlas agent uses it for PR reviews, issue tracking, release management, and code search.
@@ -2367,6 +2435,434 @@ Email sending requires explicit confirmation. The `gog-email-send` skill asks fo
 
 ---
 
+# Instagram Integration
+
+Instagram Graph API provides profile statistics, post engagement, reach, and impressions. The @pixel agent uses it for social media analytics. Supports multiple accounts via OAuth through Facebook.
+
+## Setup
+
+### 1. Create a Facebook App
+
+1. Go to [developers.facebook.com](https://developers.facebook.com)
+2. Create a new app (type: Business)
+3. Navigate to **Settings > Basic**
+4. Copy your **App ID** and **App Secret**
+
+### 2. Configure .env
+
+```env
+META_APP_ID=your_app_id_here
+META_APP_SECRET=your_app_secret_here
+```
+
+### 3. Connect Your Account
+
+```bash
+make social-auth
+```
+
+Open the dashboard Integrations page and click **Connect** on Instagram. Complete the Facebook OAuth flow. The Instagram Business/Creator account linked to your Facebook Page will be connected.
+
+### 4. Test the Connection
+
+```bash
+make social
+```
+
+## Available Commands
+
+The `int-instagram` skill queries the Instagram Graph API:
+
+| Command | What it does |
+|---|---|
+| `accounts` | List configured Instagram accounts |
+| `profile [account]` | Followers, bio, media count |
+| `recent_posts [account] [N]` | Last N posts with engagement |
+| `top_posts [account] [N]` | Top N posts by engagement |
+| `post_insights POST_ID` | Detailed insights for a specific post |
+| `account_insights [account]` | Impressions, reach, profile views (30 days) |
+| `summary` | Summary across all accounts |
+
+## Key Metrics
+
+- Followers (delta via daily snapshots)
+- Engagement rate: (likes + comments) / followers
+- Reach and impressions
+- Profile views
+- Best post of the period
+- Reels vs static post performance
+- Publishing frequency
+
+## Rate Limits
+
+- Platform endpoints: 4800 calls per 24 hours
+- Business Discovery / Hashtag: 200 calls per hour per user
+
+## Skills That Use Instagram
+
+| Skill | What it does |
+|---|---|
+| `int-instagram` | Direct Instagram Graph API queries |
+| `social-instagram-report` | Instagram analytics HTML report |
+| `social-analytics-report` | Cross-platform analytics (includes Instagram) |
+
+## Automated Routines
+
+| Routine | Schedule | Make command |
+|---|---|---|
+| Social Analytics | 18:00 BRT daily | `make social` |
+| Social Weekly | Friday 08:15 BRT | `make social` |
+| Social Monthly | 1st of month | `make social` |
+
+
+---
+
+# Licensing Integration
+
+The Evolution Licensing API provides telemetry and growth metrics for the open source ecosystem. The @atlas agent uses it to track active instances, geographic distribution, version adoption, and commercial alerts.
+
+## Setup
+
+### 1. Get Your Admin Token
+
+Contact the Evolution team to obtain a Licensing API admin token.
+
+### 2. Configure .env
+
+```env
+LICENSING_ADMIN_TOKEN=your_token_here
+```
+
+### 3. Test the Connection
+
+```bash
+make licensing
+```
+
+This runs the daily licensing report, querying 24-hour telemetry data.
+
+## Available Commands
+
+The `int-licensing` skill queries the Licensing API via a Python client:
+
+| Command | What it does |
+|---|---|
+| `keys [--status --tier]` | List license keys with optional filters |
+| `instances [--status --tier --geo --heartbeat]` | List active instances |
+| `instance_detail ID` | Detailed info for a specific instance |
+| `telemetry --period 24h/7d/30d` | Telemetry summary for a period |
+| `activation_log [--api_key KEY]` | Activation history |
+| `alerts [--resolved false]` | Commercial alerts (expiring, overuse) |
+| `customers [--search --country --tier]` | Customer list with filters |
+| `customer_detail ID` | Detailed customer info |
+| `products` | List available products |
+
+## Key Metrics
+
+| Metric | What it measures |
+|---|---|
+| Active instances | Total adoption (heartbeat coverage) |
+| Heartbeat 24h | Instances actually running right now |
+| Geographic distribution | Where users are located |
+| Version distribution | Adoption of new releases |
+| Messages sent | Real usage volume |
+| Feature usage | Which features matter most |
+| Daily message trend | Growth curve over time |
+| Commercial alerts | License issues requiring attention |
+
+## Skills That Use Licensing
+
+| Skill | What it does |
+|---|---|
+| `int-licensing` | Direct Licensing API queries |
+| `prod-licensing-daily` | Daily open source growth report (HTML) |
+| `prod-licensing-weekly` | Weekly growth report with trend analysis |
+| `prod-licensing-monthly` | Monthly comprehensive growth report |
+
+## Automated Routines
+
+| Routine | Schedule | Make command |
+|---|---|---|
+| Licensing Daily | 18:30 BRT daily | `make licensing` |
+| Licensing Weekly | Friday 07:45 BRT | `make licensing-weekly` |
+| Licensing Monthly | 1st of month | `make licensing-month` |
+
+
+---
+
+# Linear Integration
+
+Linear is used for issue tracking, sprint management, and project planning. The @atlas agent monitors issues, blockers, sprint progress, and review queues via the Linear MCP server.
+
+## Setup
+
+### 1. Configure MCP
+
+Linear connects through an MCP server (`linear-server`) configured in `.claude/settings.json`. Claude Code starts it automatically when Linear tools are needed.
+
+No `.env` variables are required -- the MCP server handles authentication through its own configuration.
+
+### 2. Test the Connection
+
+```bash
+make linear
+```
+
+This runs the Linear review routine, which checks issues in review, blockers, stale items, and sprint progress.
+
+## Available Tools
+
+The Linear MCP server exposes these tools:
+
+| Tool | What it does |
+|---|---|
+| `list_issues` | List issues with filters (state, assignee, priority) |
+| `get_issue` | Get details of a specific issue |
+| `save_issue` | Create or update an issue |
+| `list_projects` | List all projects |
+| `get_project` | Get project details |
+| `list_cycles` | List sprints/cycles (current, past, future) |
+| `list_teams` | List teams |
+| `list_users` | List team members |
+| `list_comments` | List comments on an issue |
+| `save_comment` | Add a comment to an issue |
+| `list_milestones` | List milestones |
+| `research` | Search across Linear data |
+
+## Key Metrics
+
+The `int-linear-review` skill analyzes:
+
+- **In Review:** Issues awaiting review, who needs to review, days pending
+- **Blockers:** Urgent and high-priority issues with responsible assignees
+- **Stale issues:** In Progress items with no updates in 3+ days
+- **My issues:** User's assigned issues sorted by priority
+- **Sprint progress:** Completion percentage and deadline
+
+## Skills That Use Linear
+
+| Skill | What it does |
+|---|---|
+| `int-linear-review` | Review issues, blockers, stale items, sprint progress |
+| `evo-sprint-planning` | Generate sprint plans from epics |
+| `evo-sprint-status` | Sprint status summary with risks |
+
+## Automated Routines
+
+| Routine | Schedule | Make command |
+|---|---|---|
+| Linear Review | Mon/Wed/Fri 09:00 BRT | `make linear` |
+
+
+---
+
+# LinkedIn Integration
+
+LinkedIn API provides profile information and organization statistics. The @pixel agent uses it for social media analytics. Supports multiple accounts via OAuth.
+
+## Setup
+
+### 1. Create a LinkedIn App
+
+1. Go to [linkedin.com/developers](https://www.linkedin.com/developers/)
+2. Create a new app
+3. Navigate to **Auth** tab
+4. Copy your **Client ID** and **Client Secret**
+
+### 2. Configure .env
+
+```env
+LINKEDIN_CLIENT_ID=your_client_id_here
+LINKEDIN_CLIENT_SECRET=your_client_secret_here
+```
+
+### 3. Connect Your Account
+
+```bash
+make social-auth
+```
+
+Open the dashboard Integrations page and click **Connect** on LinkedIn. Complete the OAuth flow.
+
+### 4. Test the Connection
+
+```bash
+make social
+```
+
+## Available Commands
+
+The `int-linkedin` skill queries the LinkedIn API:
+
+| Command | What it does |
+|---|---|
+| `accounts` | List configured LinkedIn accounts |
+| `profile [account]` | Name, email, photo |
+| `my_posts [account] [N]` | Recent posts (requires `w_member_social` scope) |
+| `post_stats POST_URN` | Reactions and comments on a post |
+| `org_followers [account]` | Organization followers (requires Advertising API) |
+| `summary` | Summary across all accounts |
+
+## Available Scopes
+
+| Scope | Status | LinkedIn Product |
+|---|---|---|
+| `openid profile email` | Active | Sign In with OpenID Connect |
+| `w_member_social` | Active | Share on LinkedIn |
+| `r_organization_social` | Pending | Advertising API (requires approval) |
+| `r_organization_admin` | Pending | Advertising API (requires approval) |
+
+## Current Limitations
+
+- **Posts:** Reading posts requires the `w_member_social` scope
+- **Company Page analytics:** Requires Advertising API approval (pending)
+- **Workaround:** Export CSV from LinkedIn Analytics for Company Page data
+
+## Skills That Use LinkedIn
+
+| Skill | What it does |
+|---|---|
+| `int-linkedin` | Direct LinkedIn API queries |
+| `social-linkedin-report` | LinkedIn analytics HTML report |
+| `social-analytics-report` | Cross-platform analytics (includes LinkedIn) |
+
+## Automated Routines
+
+| Routine | Schedule | Make command |
+|---|---|---|
+| Social Analytics | 18:00 BRT daily | `make social` |
+| Social Weekly | Friday 08:15 BRT | `make social` |
+| Social Monthly | 1st of month | `make social` |
+
+
+---
+
+# Obsidian Integration
+
+Obsidian is used as the local vault for notes, knowledge base, and workspace management. Claude interacts with Obsidian via a CLI that communicates with the running Obsidian instance.
+
+## Setup
+
+### 1. Install Obsidian
+
+Download and install from [obsidian.md](https://obsidian.md). Open your vault.
+
+### 2. Ensure the CLI Is Available
+
+The `obsidian` CLI must be installed and accessible from the terminal. Run:
+
+```bash
+obsidian help
+```
+
+If it works, the integration is ready. No `.env` variables are required.
+
+## Available Commands
+
+The `obs-obsidian-cli` skill provides vault interaction:
+
+| Command | What it does |
+|---|---|
+| `obsidian read file="Note"` | Read a note by name |
+| `obsidian create name="Note" content="..."` | Create a new note |
+| `obsidian append file="Note" content="..."` | Append content to a note |
+| `obsidian search query="term" limit=10` | Search vault content |
+| `obsidian daily:read` | Read today's daily note |
+| `obsidian daily:append content="..."` | Append to today's daily note |
+| `obsidian property:set name="key" value="val"` | Set frontmatter properties |
+| `obsidian tasks daily todo` | List daily tasks |
+| `obsidian tags sort=count counts` | List tags with counts |
+| `obsidian backlinks file="Note"` | Show backlinks for a note |
+
+## Related Skills
+
+OpenClaude includes several Obsidian-specific skills:
+
+| Skill | What it does |
+|---|---|
+| `obs-obsidian-cli` | Core vault operations -- read, create, search, manage notes |
+| `obs-obsidian-markdown` | Obsidian Flavored Markdown -- wikilinks, callouts, embeds, properties |
+| `obs-json-canvas` | Create and edit `.canvas` files (nodes, edges, groups) |
+| `obs-obsidian-bases` | Create and edit `.base` files (database views, filters, formulas) |
+| `obs-defuddle` | Extract clean markdown from web pages using Defuddle CLI |
+
+## Key Features
+
+- **File targeting:** Use `file=<name>` (wikilink-style) or `path=<path>` (exact path from vault root)
+- **Vault targeting:** Use `vault="Name"` to target a specific vault
+- **Silent mode:** Add `silent` flag to prevent files from opening in the UI
+- **Clipboard:** Add `--copy` to copy output to clipboard
+- **Plugin development:** Supports reloading plugins, running JavaScript, capturing errors, and taking screenshots
+
+
+---
+
+# Omie ERP Integration
+
+Omie is a Brazilian cloud ERP used for managing clients, products, sales orders, invoices (NF-e), financials (accounts receivable/payable), and stock. The @flux agent uses Omie data alongside Stripe for a complete financial picture.
+
+## Setup
+
+### 1. Get Your API Credentials
+
+1. Go to [omie.com.br](https://omie.com.br)
+2. Navigate to **Settings > Integrations > API**
+3. Copy your **App Key** and **App Secret**
+
+### 2. Configure .env
+
+```env
+OMIE_APP_KEY=your_app_key_here
+OMIE_APP_SECRET=your_app_secret_here
+```
+
+### 3. Test the Connection
+
+```bash
+make fin-pulse
+```
+
+This runs the daily financial pulse, which queries both Stripe and Omie. If Omie credentials are valid, you will see accounts payable/receivable data in the report.
+
+## Available Commands
+
+The `int-omie` skill provides these operations via a Python client:
+
+| Category | Commands |
+|---|---|
+| **Clients** | `clientes_listar`, `clientes_buscar` (by CNPJ/CPF or code), `clientes_detalhar` |
+| **Products** | `produtos_listar`, `produtos_detalhar` |
+| **Sales Orders** | `pedidos_listar`, `pedidos_detalhar`, `pedidos_status` |
+| **Financials** | `contas_receber`, `contas_pagar`, `resumo_financeiro` |
+| **Invoices (NF-e)** | `nfe_listar`, `nfe_detalhar` |
+| **Stock** | `estoque_posicao`, `estoque_produto` |
+
+All commands support pagination with `[pagina] [por_pagina]` arguments.
+
+## Webhook Support
+
+Omie can send real-time events via webhooks. Supported events include order creation/update, invoice issuance/cancellation, payment received/sent, and client creation/update.
+
+## Skills That Use Omie
+
+| Skill | What it does |
+|---|---|
+| `int-omie` | Direct Omie API queries -- clients, orders, invoices, financials, stock |
+| `fin-daily-pulse` | Daily snapshot combining Stripe revenue + Omie expenses |
+| `fin-monthly-close-kickoff` | Month-end close with P&L, reconciliations, action items |
+| `fin-financial-statements` | Full financial statements with variance analysis |
+
+## Automated Routines
+
+| Routine | Schedule | Make command |
+|---|---|---|
+| Financial Pulse | 19:00 BRT daily | `make fin-pulse` |
+| Financial Weekly | Friday 07:30 BRT | `make fin-weekly` |
+| Monthly Close Kickoff | 1st of month | `make fin-close` |
+
+
+---
+
 # Integrations Overview
 
 OpenClaude connects to external services through three mechanisms: **MCP servers**, **API clients**, and **OAuth flows**. Each integration provides data to one or more agents and routines.
@@ -2465,13 +2961,38 @@ You can edit credentials through:
 - Directly in the terminal: `nano .env`
 
 See individual integration guides for setup steps:
-- [Discord](discord.md)
-- [Stripe](stripe.md)
-- [GitHub](github.md)
-- [Google Calendar + Gmail](google.md)
-- [Evolution API](evolution-api.md)
-- [Evolution Go](evolution-go.md)
-- [Evo CRM](evo-crm.md)
+
+**Financial & ERP:**
+- [Stripe](stripe.md) -- MRR, charges, subscriptions, churn
+- [Omie](omie.md) -- Brazilian ERP: clients, invoices, financials, stock
+
+**Meetings & Tasks:**
+- [Fathom](fathom.md) -- Meeting recordings, transcripts, action items
+- [Todoist](todoist.md) -- Task management via CLI
+
+**Messaging:**
+- [Telegram](telegram.md) -- Bot messaging and notifications via MCP
+- [WhatsApp](whatsapp.md) -- Group messages via Evolution Foundation API
+- [Discord](discord.md) -- Community channels and messages
+
+**Social Media:**
+- [YouTube](youtube.md) -- Channel stats, videos, engagement (OAuth)
+- [Instagram](instagram.md) -- Profile, posts, engagement (Graph API + OAuth)
+- [LinkedIn](linkedin.md) -- Profile and org stats (OAuth)
+
+**Development:**
+- [GitHub](github.md) -- PRs, issues, releases via MCP + CLI
+- [Linear](linear.md) -- Issues, sprints, project tracking via MCP
+- [Licensing](licensing.md) -- Open source telemetry and growth metrics
+
+**Productivity:**
+- [Google Calendar + Gmail](google.md) -- Agenda, scheduling, email triage
+- [Obsidian](obsidian.md) -- Vault management, notes, search via CLI
+
+**Evolution Platform:**
+- [Evolution API](evolution-api.md) -- WhatsApp instances and messaging
+- [Evolution Go](evolution-go.md) -- Evolution Go instances
+- [Evo CRM](evo-crm.md) -- CRM contacts, conversations, pipelines
 
 ## Multi-Account Support
 
@@ -2581,6 +3102,310 @@ Claude uses the `int-stripe` skill to call the Stripe API and return formatted r
 - The secret key has full access to your Stripe account. Use a **restricted key** if you only need read access (Developers > API Keys > Create restricted key).
 - Never commit `.env` to version control. The `.gitignore` already excludes it.
 - The dashboard masks the key in the .env editor (displayed as `*****`).
+
+
+---
+
+# Telegram Integration
+
+Telegram provides real-time messaging and notifications via a bot connected through MCP. The @clawdia agent uses it to send alerts, receive commands, and communicate with the user on the go.
+
+## Setup
+
+### 1. Create a Bot
+
+1. Open Telegram and message [@BotFather](https://t.me/BotFather)
+2. Send `/newbot` and follow the prompts
+3. Copy the **Bot Token** provided
+
+### 2. Get Your Chat ID
+
+1. Send `/start` to your new bot
+2. Visit `https://api.telegram.org/bot<TOKEN>/getUpdates`
+3. Find `chat.id` in the response
+
+### 3. Configure .env
+
+```env
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_CHAT_ID=your_chat_id_here
+```
+
+### 4. Start the Bot
+
+```bash
+make telegram
+```
+
+This starts the Telegram bot in a background screen session.
+
+## Available Tools
+
+Telegram is connected via MCP plugin. The following tools are available:
+
+| Tool | What it does |
+|---|---|
+| `reply` | Send a message or reply to a specific message |
+| `edit_message` | Edit an already sent message |
+| `react` | Add an emoji reaction to a message |
+| `download_attachment` | Download photo, file, or audio from a message |
+
+### Sending Messages
+
+```
+reply(chat_id="...", text="Your message here")
+```
+
+### Sending Attachments
+
+```
+reply(chat_id="...", text="Here is the report", files=["/path/to/file.pdf"])
+```
+
+### Replying to a Specific Message
+
+```
+reply(chat_id="...", text="Your reply", reply_to="message_id")
+```
+
+## Key Behaviors
+
+- Messages sent in the Claude session are **not visible** to Telegram -- everything must go through the `reply` tool
+- Edits do not trigger push notifications -- send a new message for important updates
+- The Bot API has no history or search -- only incoming messages are visible
+- Access control is managed via the `/telegram:access` skill
+
+## Skills That Use Telegram
+
+| Skill | What it does |
+|---|---|
+| `int-telegram` | Send, reply, react, edit messages via MCP |
+
+## Automated Routines
+
+The Telegram bot runs continuously (`make telegram`) and receives messages in real time. Many routines send notification summaries to Telegram as part of their output.
+
+
+---
+
+# Todoist Integration
+
+Todoist is used for task management across the workspace. The @clawdia agent reviews, organizes, and prioritizes tasks daily.
+
+## Setup
+
+### 1. Get Your API Token
+
+1. Go to [app.todoist.com](https://app.todoist.com)
+2. Navigate to **Settings > Integrations > Developer**
+3. Copy your **API Token**
+
+### 2. Install the CLI
+
+```bash
+npm install -g todoist-ts-cli@^0.2.0
+```
+
+### 3. Configure
+
+```bash
+todoist auth <your-token>
+# or set in .env:
+# TODOIST_API_TOKEN=your_token_here
+```
+
+### 4. Test the Connection
+
+```bash
+make review
+```
+
+This runs the Todoist review routine, which lists and organizes tasks in the Evolution project.
+
+## Available Commands
+
+The `int-todoist` skill uses the `todoist` CLI:
+
+| Command | What it does |
+|---|---|
+| `todoist` / `todoist today` | Show today's tasks |
+| `todoist tasks --all` | List all tasks |
+| `todoist tasks -p "Project"` | Tasks in a specific project |
+| `todoist tasks -f "p1"` | Filter by priority |
+| `todoist add "Task" --due DATE` | Create a task with due date |
+| `todoist add "Task" --priority 1` | Create a high-priority task |
+| `todoist done ID` | Complete a task |
+| `todoist reopen ID` | Reopen a completed task |
+| `todoist update ID --due DATE` | Reschedule a task |
+| `todoist move ID -p "Project"` | Move task to another project |
+| `todoist search "query"` | Search tasks |
+| `todoist projects` | List projects |
+
+## Skills That Use Todoist
+
+| Skill | What it does |
+|---|---|
+| `int-todoist` | Direct task management -- create, update, complete, search |
+| `prod-review-todoist` | Review and organize tasks: categorize, translate to PT-BR, clean up |
+| `prod-good-morning` | Morning briefing includes today's tasks |
+| `prod-end-of-day` | End-of-day review checks task completion |
+
+## Automated Routines
+
+| Routine | Schedule | Make command |
+|---|---|---|
+| Review Todoist | 06:50 BRT daily | `make review` |
+| Good Morning | 07:00 BRT daily | `make morning` |
+| End of Day | 21:00 BRT daily | `make eod` |
+
+
+---
+
+# WhatsApp Integration
+
+WhatsApp group messages are accessed via the Evolution Foundation API. The @pulse agent uses this data alongside Discord for community analysis and sentiment tracking.
+
+## Setup
+
+### 1. Get Your API Key
+
+Contact the Evolution Foundation team or configure your own Evolution API instance to get access to the WhatsApp messages API.
+
+### 2. Configure .env
+
+The WhatsApp integration uses the Evolution API credentials:
+
+```env
+EVOLUTION_API_URL=https://your-instance.com
+EVOLUTION_API_KEY=your_api_key_here
+```
+
+### 3. Test the Connection
+
+```bash
+make community
+```
+
+This runs the community pulse, which reads WhatsApp and Discord messages from the last 24 hours.
+
+## Available Commands
+
+The `int-whatsapp` skill queries group messages via a Python client:
+
+| Command | What it does |
+|---|---|
+| `messages_24h` | All messages from the last 24 hours |
+| `messages_24h --group GROUP_ID` | Messages from a specific group |
+| `messages_7d` | Messages from the last 7 days |
+| `messages_30d` | Messages from the last 30 days |
+| `messages --start DATE --end DATE` | Custom date range with filtering |
+| `groups` | List active groups (with message counts) |
+| `stats` | Statistics: messages by day, group, type, and top participants |
+
+## Message Types
+
+| Type | Description |
+|---|---|
+| `conversation` | Text message |
+| `imageMessage` | Image |
+| `videoMessage` | Video |
+| `audioMessage` | Audio |
+| `documentMessage` | Document/file |
+| `stickerMessage` | Sticker |
+| `reactionMessage` | Reaction |
+
+## Skills That Use WhatsApp
+
+| Skill | What it does |
+|---|---|
+| `int-whatsapp` | Direct WhatsApp API queries -- messages, groups, stats |
+| `pulse-daily` | Daily community pulse (Discord + WhatsApp) |
+| `pulse-weekly` | Weekly community analysis |
+| `pulse-monthly` | Monthly community report |
+
+## Automated Routines
+
+| Routine | Schedule | Make command |
+|---|---|---|
+| Community Pulse | 20:00 BRT daily | `make community` |
+| Community Weekly | Monday 09:30 BRT | `make community-week` |
+| Community Monthly | 1st of month | `make community-month` |
+
+
+---
+
+# YouTube Integration
+
+YouTube Data API v3 provides channel statistics, video metrics, and engagement data. The @pixel agent uses it for social media analytics and content performance tracking. Supports multiple accounts via OAuth.
+
+## Setup
+
+### 1. Create OAuth Credentials
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Enable the **YouTube Data API v3**
+3. Create an **OAuth 2.0 Client ID** (Web application)
+4. Set redirect URI to `http://localhost:8765/callback/youtube`
+
+### 2. Configure .env
+
+```env
+YOUTUBE_OAUTH_CLIENT_ID=your_client_id_here
+YOUTUBE_OAUTH_CLIENT_SECRET=your_client_secret_here
+```
+
+### 3. Connect Your Account
+
+```bash
+make social-auth
+```
+
+Open the dashboard Integrations page and click **Connect** on YouTube. Complete the OAuth flow. Tokens are saved to `.env` automatically.
+
+### 4. Test the Connection
+
+```bash
+make social
+```
+
+## Available Commands
+
+The `int-youtube` skill queries the YouTube Data API:
+
+| Command | What it does |
+|---|---|
+| `accounts` | List configured YouTube accounts |
+| `channel_stats [account]` | Subscribers, total views, video count |
+| `recent_videos [account] [N]` | Last N videos with metrics |
+| `top_videos [account] [N]` | Top N videos by views |
+| `video_stats VIDEO_ID` | Stats for specific videos |
+| `comments VIDEO_ID [N]` | Comments on a video |
+| `summary` | Summary across all accounts |
+
+## Key Metrics
+
+- Subscribers (with daily/weekly/monthly delta)
+- Total views and per-video views
+- Engagement rate: (likes + comments) / views
+- Best performing video of the period
+- Publishing frequency
+- Recent comment sentiment
+
+## Skills That Use YouTube
+
+| Skill | What it does |
+|---|---|
+| `int-youtube` | Direct YouTube API queries |
+| `social-youtube-report` | YouTube analytics HTML report |
+| `social-analytics-report` | Cross-platform analytics (includes YouTube) |
+
+## Automated Routines
+
+| Routine | Schedule | Make command |
+|---|---|---|
+| Social Analytics | 18:00 BRT daily | `make social` |
+| Social Weekly | Friday 08:15 BRT | `make social` |
+| Social Monthly | 1st of month | `make social` |
 
 
 ---
