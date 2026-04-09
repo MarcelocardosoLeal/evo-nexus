@@ -32,6 +32,12 @@ function AppContent() {
 
   // Docs are public — render without auth
   if (isDocs) {
+    // Redirect /docs/llms-full.txt to the API endpoint
+    if (location.pathname === '/docs/llms-full.txt') {
+      const apiBase = import.meta.env.DEV ? 'http://localhost:8080' : ''
+      window.location.href = `${apiBase}/api/docs/llms-full.txt`
+      return null
+    }
     return (
       <Routes>
         <Route path="/docs" element={<Docs />} />

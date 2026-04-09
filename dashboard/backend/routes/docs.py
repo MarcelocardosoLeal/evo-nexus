@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 
-from flask import Blueprint, jsonify, send_from_directory, abort
+from flask import Blueprint, Response, jsonify, send_from_directory, abort
 
 from routes._helpers import WORKSPACE
 
@@ -28,6 +28,25 @@ def _title_from_md(path: Path) -> str:
         pass
     # Fallback: derive from filename
     return path.stem.replace("-", " ").replace("_", " ").title()
+
+
+def _content_preview(path: Path, length: int = 200) -> str:
+    """Return first `length` chars of a markdown file, stripped of headers and formatting."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        return ""
+    # Remove markdown headers
+    text = re.sub(r"^#{1,6}\s+.*$", "", text, flags=re.MULTILINE)
+    # Remove markdown formatting: bold, italic, code, links, images
+    text = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", text)
+    text = re.sub(r"\[[^\]]*\]\([^)]*\)", "", text)
+    text = re.sub(r"[*_`~]+", "", text)
+    # Remove horizontal rules
+    text = re.sub(r"^---+\s*$", "", text, flags=re.MULTILINE)
+    # Collapse whitespace
+    text = re.sub(r"\s+", " ", text).strip()
+    return text[:length]
 
 
 def _slug(name: str) -> str:
@@ -55,6 +74,7 @@ def _build_tree() -> list[dict]:
                 "title": title,
                 "slug": f.stem,
                 "path": f.name,
+                "content_preview": _content_preview(f),
             })
         sections.append({
             "title": "Getting Started",
@@ -79,6 +99,7 @@ def _build_tree() -> list[dict]:
                 "title": title,
                 "slug": str(rel.with_suffix("")),
                 "path": str(rel),
+                "content_preview": _content_preview(f),
             })
         sections.append({
             "title": subdir.name.replace("-", " ").replace("_", " ").title(),
@@ -106,6 +127,25 @@ def doc_image(filename: str):
     if not img_path.is_file():
         abort(404)
     return send_from_directory(str(IMGS_DIR), safe)
+
+
+@bp.route("/api/docs/llms-full.txt")
+def llms_full():
+    """Concatenate all docs into one text file for LLM consumption."""
+    if not DOCS_DIR.is_dir():
+        return Response("No documentation found.", status=404, mimetype="text/plain")
+
+    parts = ["# OpenClaude Documentation\n\nComplete reference for LLMs.\n"]
+    md_files = sorted(DOCS_DIR.rglob("*.md"), key=lambda f: str(f.relative_to(DOCS_DIR)))
+    for f in md_files:
+        try:
+            content = f.read_text(encoding="utf-8", errors="replace")
+            parts.append(content)
+        except Exception:
+            continue
+
+    full_text = "\n\n---\n\n".join(parts)
+    return Response(full_text, mimetype="text/plain; charset=utf-8")
 
 
 @bp.route("/api/docs/<path:filepath>")

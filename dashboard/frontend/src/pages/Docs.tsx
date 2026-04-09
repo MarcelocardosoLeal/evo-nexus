@@ -10,6 +10,7 @@ interface DocEntry {
   title: string
   slug: string
   path: string
+  content_preview?: string
 }
 
 interface DocSection {
@@ -100,12 +101,14 @@ export default function Docs() {
     setCollapsed((prev) => ({ ...prev, [slug]: !prev[slug] }))
   }
 
-  // Filter sections by search
+  // Filter sections by search (matches title and content_preview)
+  const searchLower = search.toLowerCase()
   const filtered = sections
     .map((sec) => ({
       ...sec,
       children: sec.children.filter((c) =>
-        c.title.toLowerCase().includes(search.toLowerCase())
+        c.title.toLowerCase().includes(searchLower) ||
+        (c.content_preview && c.content_preview.toLowerCase().includes(searchLower))
       ),
     }))
     .filter((sec) => sec.children.length > 0)
@@ -157,19 +160,36 @@ export default function Docs() {
             </button>
             {!collapsed[sec.slug] && (
               <div className="ml-2">
-                {sec.children.map((child) => (
-                  <button
-                    key={child.slug}
-                    onClick={() => handleNav(child.slug)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors mb-0.5 block ${
-                      activeSlug === child.slug
-                        ? 'text-[#00FFA7] bg-[#00FFA7]/10 border-l-2 border-[#00FFA7]'
-                        : 'text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 border-l-2 border-transparent'
-                    }`}
-                  >
-                    {child.title}
-                  </button>
-                ))}
+                {sec.children.map((child) => {
+                  const matchesContent = search && child.content_preview &&
+                    !child.title.toLowerCase().includes(searchLower) &&
+                    child.content_preview.toLowerCase().includes(searchLower)
+                  const snippetStart = matchesContent
+                    ? child.content_preview!.toLowerCase().indexOf(searchLower)
+                    : -1
+                  const snippet = matchesContent && snippetStart >= 0
+                    ? '...' + child.content_preview!.slice(Math.max(0, snippetStart - 20), snippetStart + search.length + 40) + '...'
+                    : null
+
+                  return (
+                    <button
+                      key={child.slug}
+                      onClick={() => handleNav(child.slug)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors mb-0.5 block ${
+                        activeSlug === child.slug
+                          ? 'text-[#00FFA7] bg-[#00FFA7]/10 border-l-2 border-[#00FFA7]'
+                          : 'text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 border-l-2 border-transparent'
+                      }`}
+                    >
+                      {child.title}
+                      {snippet && (
+                        <span className="block text-xs text-[#475467] mt-0.5 truncate">
+                          {snippet}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             )}
           </div>
