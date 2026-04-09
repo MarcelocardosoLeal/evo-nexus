@@ -9,29 +9,29 @@ Complete pipeline to sync Fathom meetings and organize them in `workspace/meetin
 
 ## Prerequisites
 
-- `FATHOM_API_KEY` configurada (ver skill `fathom`)
-- `jq` instalado
-- Script `fathom.sh` disponível em `.claude/skills/fathom/fathom.sh`
+- `FATHOM_API_KEY` configured (see skill `fathom`)
+- `jq` installed
+- Script `fathom.sh` available at `.claude/skills/fathom/fathom.sh`
 
 ## Full Workflow
 
-Ao ser acionado, execute os passos abaixo **em ordem**:
+When triggered, execute the steps below **in order**:
 
 ### Step 1 — Fetch today's meetings
 
 By default, fetch only **today's** meetings:
 
 ```bash
-# Buscar meetings de hoje com summary e action items
+# Fetch today's meetings with summary and action items
 {project-root}/.claude/skills/fathom/fathom.sh meetings --after "$(date +%Y-%m-%d)" --include-summary --include-actions
 ```
 
-If the user specifies a different period (ex: "sync da semana", "sync de ontem"), ajustar o `--after` e adicionar `--before` conforme necessário:
+If the user specifies a different period (e.g., "sync this week", "sync yesterday"), adjust `--after` and add `--before` as needed:
 - "sync de ontem": `--after "$(date -v-1d +%Y-%m-%d)" --before "$(date +%Y-%m-%d)"`
 - "sync da semana": `--after "$(date -v-7d +%Y-%m-%d)"`
 - "sync do mês": `--after "$(date -v-1m +%Y-%m-%d)"`
 
-The API already returns `default_summary.markdown_formatted` e `action_items` completos — não precisa de chamadas extras.
+The API already returns `default_summary.markdown_formatted` and complete `action_items` — no extra calls needed.
 
 ### Step 2 — Filter unprocessed (CRITICAL — anti-duplication)
 
@@ -53,43 +53,43 @@ For each new meeting, save the complete JSON to:
 {project-root}/workspace/meetings/fathom/YYYY-MM-DD/YYYY-MM-DD__{recording_id}__{slug-do-titulo}.json
 ```
 
-Onde:
-- `YYYY-MM-DD` = data do `created_at`
-- `slug-do-titulo` = título em lowercase, espaços→hifens, sem caracteres especiais
+Where:
+- `YYYY-MM-DD` = date from `created_at`
+- `slug-do-titulo` = title in lowercase, spaces→hyphens, without special characters
 
 ### Step 4 — Classify project
 
 Determine the project based on the meeting title:
 
-| Padrão no título | Projeto |
+| Title pattern | Project |
 |---|---|
 | Main API, API | `main-api` |
 | CRM, Product | `crm-product` |
 | Academy, Course | `academy` |
 | Partner, Partnership | `partner` |
-| Financeiro, NF, Fatura | `foundation` |
-| Planning, Sprint, Grooming | inferir do contexto |
-| Comercial, Parceria | `comercial` |
-| Operação, Interno, Daily | `interno` |
-| (default) | `outros` |
+| Financial, NF, Invoice | `foundation` |
+| Planning, Sprint, Grooming | infer from context |
+| Sales, Partnership | `sales` |
+| Operations, Internal, Daily | `internal` |
+| (default) | `other` |
 
 ### Step 5 — Save summary
 
 Use the `default_summary.markdown_formatted` that already came in the API response (Step 1).
 
-Read the template at `.claude/templates/meeting-summary.md` e and fill with the meeting data.
+Read the template at `.claude/templates/meeting-summary.md` and fill with the meeting data.
 
-Save em:
+Save to:
 ```
-{project-root}/workspace/meetings/summaries/{projeto}/YYYY-MM-DD__{projeto}__meeting__{slug}__{recording_id}.summary.md
+{project-root}/workspace/meetings/summaries/{project}/YYYY-MM-DD__{project}__meeting__{slug}__{recording_id}.summary.md
 ```
 
 File format (based on the template):
 ```markdown
 ---
 date: YYYY-MM-DD
-title: {título original}
-project: {projeto}
+title: {original title}
+project: {project}
 type: meeting
 status: summary
 tags: [fathom, meeting]
@@ -98,11 +98,11 @@ recording_url: {url ou share_url}
 people: [{nomes dos calendar_invitees}]
 ---
 
-{conteúdo do default_summary.markdown_formatted}
+{content from default_summary.markdown_formatted}
 
 ## Action Items
 
-{lista de action_items formatada como checklist:}
+{list of action_items formatted as checklist:}
 - [ ] **{assignee.name}** — {description} ([{recording_timestamp}]({recording_playback_url}))
 ```
 
@@ -112,17 +112,17 @@ For each processed meeting, extract the `action_items` and create tasks in Todoi
 
 **BEFORE CREATING ANY TASK — mandatory anti-duplication check:**
 
-1. Verificar no arquivo de estado local:
+1. Check the local state file:
    ```
    {project-root}/workspace/meetings/.state/fathom-todoist-sync.json
    ```
    If the `recording_id` already has synced tasks, **DO NOT create new tasks**. Skip to Step 7.
 
-2. Search Todoist for existing tasks com o meeting title ou recording_id no comentário:
+2. Search Todoist for existing tasks with the meeting title or recording_id in the comment:
    ```bash
    todoist list --filter "search: {meeting title}"
    ```
-   If you find tasks that clearly correspond to the same action items, **DO NOT duplicate**. Registrar os IDs existentes no `fathom-todoist-sync.json` e pular.
+   If you find tasks that clearly correspond to the same action items, **DO NOT duplicate**. Record the existing IDs in `fathom-todoist-sync.json` and skip.
 
 **Triage rules (only if passed the check above):**
 
@@ -137,14 +137,14 @@ For each processed meeting, extract the `action_items` and create tasks in Todoi
 **Todoist task format:**
 
 ```
-Título: {ação traduzida e clara em PT-BR}
-Projeto: Evolution
-Prioridade: p3 (default) — subir para p2 se for blocker ou deadline próximo
-Comentário: 
-  📋 Origem: {meeting title} ({data})
-  🎯 Objetivo: {o que essa ação resolve}
-  ➡️ Próximo passo: {ação concreta}
-  🔗 Referência: {link do recording_playback_url}
+Title: {translated and clear action in PT-BR}
+Project: Evolution
+Priority: p3 (default) — raise to p2 if blocker or near deadline
+Comment: 
+  📋 Origin: {meeting title} ({date})
+  🎯 Objective: {what this action resolves}
+  ➡️ Next step: {concrete action}
+  🔗 Reference: {recording_playback_url link}
 ```
 
 **Execute directly, without intermediate report.** Do not list tasks before creating — create and confirm at the end.
@@ -162,24 +162,24 @@ One ID per line. Append, do not overwrite.
 
 Also update `fathom-todoist-sync.json` with the created task IDs.
 
-**Order per meeting:** Passo 3 → 4 → 5 → 6 → **7 (gravar state)** → next meeting.
+**Order per meeting:** Step 3 → 4 → 5 → 6 → **7 (write state)** → next meeting.
 
 ### Step 8 — Final report
 
 When finished, present a short summary:
 
 ```
-## Sync Fathom — Concluído
+## Sync Fathom — Completed
 
-**Período:** {data mais antiga} → {data mais recente}
-**Novos:** {N} reuniões processadas
-**Já processados:** {M} ignorados
-**Tarefas criadas:** {T} no Todoist (projeto Evolution)
+**Period:** {oldest date} → {most recent date}
+**New:** {N} meetings processed
+**Already processed:** {M} skipped
+**Tasks created:** {T} in Todoist (Evolution project)
 
-### Reuniões sincronizadas:
+### Synced meetings:
 | Data | Título | Projeto | Tarefas |
 |------|--------|---------|---------|
-| ... | ... | ... | {N tarefas} |
+| ... | ... | ... | {N tasks} |
 ```
 
 Without listing tasks one by one — just counts. If the user wants details, they ask.
@@ -188,8 +188,8 @@ Without listing tasks one by one — just counts. If the user wants details, the
 
 Send the Step 8 summary via Telegram to the user using the `/int-telegram` skill:
 - Chat ID: `YOUR_CHAT_ID`
-- Usar `reply(chat_id="YOUR_CHAT_ID", text="...")` via MCP
-- Formato curto: emoji + título + contagem de reuniões e tarefas
+- Use `reply(chat_id="YOUR_CHAT_ID", text="...")` via MCP
+- Short format: emoji + title + meeting and task count
 
 If there are no new meetings (stopped at Step 2), send: "🎙️ Sync Meetings — No new meetings."
 
@@ -197,8 +197,8 @@ If there are no new meetings (stopped at Step 2), send: "🎙️ Sync Meetings �
 
 - **Do not reprocess** meetings that already exist in `fathom-processed-recording-ids.txt`
 - If the transcript is not available in the API (empty return), save the summary anyway and mark the transcript as `status: pending`
-- Create directories automatically if they do not exist (`fathom/YYYY-MM-DD/`, `raw/{projeto}/`, `summaries/{projeto}/`)
-- Maintain the existing naming convention — check examples in `raw/` e `summaries/` antes de salvar
+- Create directories automatically if they do not exist (`fathom/YYYY-MM-DD/`, `raw/{project}/`, `summaries/{project}/`)
+- Maintain the existing naming convention — check examples in `raw/` and `summaries/` before saving
 - **Todoist triage:** translate to PT-BR, Evolution project, actionable context, execute without intermediate report
 - **User's tasks only** — other people's action items stay only in the summary
 - Always use pt-BR in status messages
