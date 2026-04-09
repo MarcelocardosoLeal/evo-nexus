@@ -65,6 +65,8 @@ The very first user is created during the setup wizard when the dashboard starts
 4. Use the permission matrix to toggle actions per resource
 5. Click **Save**
 
+![Roles permission matrix](../imgs/doc-roles.png)
+
 ### Permission Matrix
 
 Each cell in the matrix is a resource + action combination:

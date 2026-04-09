@@ -62,6 +62,8 @@ Automated workflows (ADWs) that run on schedule via a Python scheduler. Morning 
 
 A web UI (React + Flask) for managing everything: view reports, start/stop services, browse agents and skills, manage users and roles, and interact with Claude Code through an embedded terminal.
 
+![Web Dashboard](imgs/doc-overview.png)
+
 ### Memory
 
 Two-tier persistence. `CLAUDE.md` holds working memory (who you are, active projects, key people). The `memory/` directory stores deeper context (people profiles, glossary, project history). Both survive across sessions.

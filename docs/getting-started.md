@@ -54,6 +54,8 @@ make dashboard-app
 
 Open http://localhost:8080 — the first run shows a setup wizard where you create your admin account and configure the workspace.
 
+![Dashboard](imgs/doc-overview.png)
+
 ### 4. Start Automated Routines
 
 ```bash
