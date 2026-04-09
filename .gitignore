@@ -83,6 +83,9 @@ config/routines.yaml
 # ── Site (landing page) ──────────
 site/node_modules/
 site/dist/
+site/package-lock.json
+site/.cache/
+# Replit artifacts (not needed in standalone build)
 site/.git/
 site/artifacts/
 site/attached_assets/
