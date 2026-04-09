@@ -50,6 +50,7 @@ memory/
 ADWs/routines/custom/
 
 # ── Runtime data & logs ───────────────────
+backups/
 ADWs/logs/
 dashboard/data/*.db
 dashboard/data/*.db-shm

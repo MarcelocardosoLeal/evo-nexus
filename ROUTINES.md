@@ -18,6 +18,7 @@ Routines are automated workflows that run on a schedule via the ADW Runner.
 | Memory Sync | `memory_sync.py` | @clawdia | Daily 21:15 |
 | Weekly Review | `weekly_review.py` | @clawdia | Friday 08:00 |
 | Memory Lint | `memory_lint.py` | @clawdia | Sunday 09:00 |
+| Daily Backup | `backup.py` | systematic | Daily 21:00 |
 
 > **Memory Sync** follows the LLM Wiki pattern: extracts knowledge from daily logs, meetings, and git changes, then **propagates updates** across related memory files (e.g., a role change updates people/, glossary.md, and CLAUDE.md). Updates `memory/index.md` (catalog) and `memory/log.md` (operation log) after each run.
 
@@ -96,6 +97,76 @@ Tasks are managed at `/tasks` in the dashboard with:
 - "Run Now" for immediate execution
 - View result/error output
 
+## Triggers (Reactive)
+
+Triggers are event-driven actions that execute in response to external events — unlike routines (cron-based) and tasks (one-off scheduled).
+
+### Types
+
+| Type | Description |
+|------|-------------|
+| **Webhook** | Receives HTTP POST from external services, validates HMAC signature, executes action |
+| **Event** | Reacts to integration events (configured in YAML or Dashboard UI) |
+
+### Supported Sources
+
+| Source | Signature | Example Events |
+|--------|-----------|----------------|
+| GitHub | `X-Hub-Signature-256` | push, pull_request, issues, release |
+| Stripe | `Stripe-Signature` | charge.succeeded, subscription.created, invoice.paid |
+| Linear | `X-Linear-Signature` | Issue (create/update), Comment |
+| Telegram | Token-based | message, callback_query |
+| Discord | Ed25519 | message_create |
+| Custom | `X-Webhook-Signature` | Any user-defined |
+
+### Configuration
+
+Triggers are defined in `config/triggers.yaml` (synced to DB on startup) or created via Dashboard UI / Skill CLI.
+
+```yaml
+webhooks:
+  - name: "Deploy Notification"
+    source: github
+    event_filter:
+      event: push
+      branch: main
+      repo: "EvolutionAPI/evolution-api"
+    action_type: skill
+    action_payload: "discord-send-message Deploy da evolution-api na main"
+    agent: pulse-community
+    enabled: true
+```
+
+### API Endpoints
+
+| Method | Endpoint | Action |
+|--------|----------|--------|
+| GET | `/api/triggers` | List triggers |
+| POST | `/api/triggers` | Create trigger |
+| PUT | `/api/triggers/<id>` | Update trigger |
+| DELETE | `/api/triggers/<id>` | Delete trigger |
+| POST | `/api/triggers/<id>/test` | Test trigger |
+| POST | `/api/triggers/webhook/<id>` | **Webhook receiver** (public, HMAC-validated) |
+
+### Webhook URL Format
+
+After creating a webhook trigger, configure the external service to POST to:
+```
+https://your-dashboard.example.com/api/triggers/webhook/<trigger_id>
+```
+
+Use the secret (shown on creation) to configure HMAC signing in the source service.
+
+### Dashboard
+
+Triggers are managed at `/triggers` in the dashboard with:
+- Filter by type (webhook/event), source, enabled/disabled
+- Create/edit/delete/test actions
+- Toggle enable/disable
+- View execution history
+- Copy webhook URL
+- Regenerate webhook secret
+
 ## Dynamic Routine Discovery
 
 Routines are discovered dynamically from script files. The system:
@@ -125,6 +196,7 @@ make eod          # End of Day
 make memory       # Memory Sync
 make memory-lint  # Memory Lint
 make weekly       # Weekly Review
+make backup-daily # Daily Backup
 
 # Any routine (core or custom) via dynamic runner
 make run R=fin-pulse        # Financial Pulse

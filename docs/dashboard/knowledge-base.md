@@ -6,6 +6,8 @@ The Knowledge Base page provides semantic search over your code, documentation, 
 
 Everything runs locally — no external APIs, no data leaves your machine.
 
+![Knowledge Base](../imgs/doc-knowledge.png)
+
 ## Enabling MemPalace
 
 MemPalace is an **optional** feature. When you first visit the Knowledge Base page, you'll see an "Enable MemPalace" button.

@@ -76,6 +76,14 @@ Metrics for each automated routine: total runs, success rate, average duration, 
 
 Create and manage one-off scheduled actions. Schedule a skill, prompt, or script to run at a specific date/time. Filter by status (pending, running, completed, failed), create new tasks, run immediately, or view results. See [Scheduled Tasks](../routines/scheduled-tasks.md) for details.
 
+![Tasks](../imgs/doc-tasks.png)
+
+### Triggers
+
+Reactive event triggers -- webhook and event-based. Create triggers that execute skills or routines in response to external events (GitHub push, Stripe payment, Linear updates). Filter by type (webhooks, events), status (enabled, disabled), and manage trigger configurations.
+
+![Triggers](../imgs/doc-triggers.png)
+
 ### Skills
 
 Browse all installed skills grouped by prefix (`social-`, `fin-`, `int-`, `prod-`, etc). Click a skill to see its full description, trigger conditions, and source file.
@@ -94,6 +102,12 @@ Start and stop background services (scheduler, Telegram bot) directly from the U
 
 ![Services](../imgs/doc-services.png)
 
+### Workspace
+
+Browse workspace reports and output files organized by domain (community, courses, daily-logs, finance, meetings, personal, projects, social, strategy). Navigate folders, filter files, and open reports directly from the dashboard.
+
+![Workspace](../imgs/doc-workspace.png)
+
 ### Memory
 
 Browse the two-tier memory system:
@@ -101,9 +115,13 @@ Browse the two-tier memory system:
 - **memory/** -- detailed files (people, projects, glossary, trends)
 - **Agent memory** -- per-agent context in `.claude/agent-memory/`
 
+![Memory](../imgs/doc-memory.png)
+
 ### Knowledge Base
 
 Optional semantic search powered by [MemPalace](https://github.com/milla-jovovich/mempalace). Enable it with one click, add directories (code, docs, notes) as sources, index them, and search by meaning -- not just keywords. Everything runs locally using ChromaDB vectors. See [knowledge-base.md](knowledge-base.md) for details.
+
+![Knowledge Base](../imgs/doc-knowledge.png)
 
 ### Integrations
 
@@ -121,6 +139,8 @@ Embedded Claude Code terminal powered by xterm.js + WebSocket. Run Claude Code c
 
 User management page (admin only). Create, edit, deactivate users. Assign roles. See last login timestamps.
 
+![Users](../imgs/doc-users.png)
+
 ### Roles
 
 Define custom roles with a granular permission matrix. Each role maps resources (chat, services, reports, etc.) to actions (view, execute, manage). Built-in roles (admin, operator, viewer) cannot be deleted but can be cloned.
@@ -137,6 +157,8 @@ Token usage and cost tracking per routine. Displays charts showing cost trends o
 
 Browse workspace files directly from the dashboard. Navigate the folder structure, preview file contents, and understand how the workspace is organized without needing terminal access.
 
+![Files](../imgs/doc-files.png)
+
 ### Scheduler
 
 Manage background services and scheduled routines. Shows all registered routines with core/custom badges, their schedules, enabled/disabled state, and last run status. Start, stop, or trigger routines from this page.
@@ -145,7 +167,15 @@ Manage background services and scheduled routines. Shows all registered routines
 
 Full audit trail of all actions: logins, config changes, routine executions, user management. Filterable by user, action, resource, and date range.
 
+![Audit Log](../imgs/doc-audit-log.png)
+
+### Backups
+
+Export and restore workspace data (all gitignored user files). Create local backups, download ZIPs, restore with merge or replace mode. Shows S3 configuration status when cloud backup is available. The daily backup routine runs automatically at 21:00.
+
 ### Config
+
+![Config](../imgs/doc-config.png)
 
 View and edit workspace configuration:
 - **CLAUDE.md** -- rendered markdown viewer

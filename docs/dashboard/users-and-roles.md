@@ -51,6 +51,8 @@ Built-in roles cannot be deleted, but you can create custom roles with any permi
 
 The new user can immediately log in at the dashboard URL.
 
+![User Management](../imgs/doc-users.png)
+
 ### First User (Setup Wizard)
 
 The very first user is created during the setup wizard when the dashboard starts with an empty database. This user is always assigned the `admin` role.

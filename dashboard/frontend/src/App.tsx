@@ -25,6 +25,8 @@ import Audit from './pages/Audit'
 import Roles from './pages/Roles'
 import Docs from './pages/Docs'
 import MemPalace from './pages/MemPalace'
+import Triggers from './pages/Triggers'
+import Backups from './pages/Backups'
 
 function AppContent() {
   const location = useLocation()
@@ -83,6 +85,7 @@ function AppContent() {
           <Route path="/agents/:name" element={<AgentDetail />} />
           <Route path="/routines" element={<Routines />} />
           <Route path="/tasks" element={<Tasks />} />
+          {hasPermission('triggers', 'view') && <Route path="/triggers" element={<Triggers />} />}
           <Route path="/skills" element={<Skills />} />
           <Route path="/skills/:name" element={<SkillDetail />} />
           <Route path="/costs" element={<Costs />} />
@@ -94,6 +97,7 @@ function AppContent() {
           <Route path="/mempalace" element={<MemPalace />} />
           <Route path="/files" element={<Files />} />
           <Route path="/systems" element={<Systems />} />
+          {hasPermission('config', 'view') && <Route path="/backups" element={<Backups />} />}
           {hasPermission('users', 'view') && <Route path="/users" element={<Users />} />}
           {hasPermission('audit', 'view') && <Route path="/audit" element={<Audit />} />}
           {hasPermission('users', 'manage') && <Route path="/roles" element={<Roles />} />}

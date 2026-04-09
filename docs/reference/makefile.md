@@ -25,6 +25,7 @@ These ship with the repo and run the essential daily loop:
 ```bash
 make morning         # Morning briefing -- agenda, emails, tasks (@clawdia)
 make eod             # End of day -- memory, logs, learnings (@clawdia)
+make backup-daily    # Daily backup -- export gitignored user data as ZIP (systematic)
 make memory          # Memory sync -- consolidate agent memory (@clawdia)
 make memory-lint     # Memory health check -- contradictions, gaps, stale data (@clawdia)
 make weekly          # Full weekly review (@clawdia)
@@ -74,6 +75,25 @@ make imessage-attach        # Attach to iMessage terminal (Ctrl+A D to detach)
 ```
 
 See [Channels Guide](../guides/channels.md) for full setup instructions.
+
+## Backup & Restore
+
+```bash
+make backup          # Export all gitignored user data to local ZIP (backups/)
+make backup-s3       # Export to local ZIP + upload to S3
+make restore FILE=<path>              # Restore from ZIP (default mode: merge)
+make restore FILE=<path> MODE=replace # Restore overwriting existing files
+make backup-list     # List local backups
+make backup-list TARGET=s3            # List S3 backups
+```
+
+Backup captures: memory, agent-memory, workspace data, config, dashboard DB, logs, custom agents/commands/templates/routines, `.env`. Excludes reconstructible dirs (`node_modules/`, `.venv/`, `dist/`).
+
+Restore modes:
+- **merge** (default): only restore files that don't exist locally
+- **replace**: overwrite everything with backup versions
+
+S3 requires `BACKUP_S3_BUCKET` in `.env` and `boto3` installed (`uv add boto3`).
 
 ## Observability
 

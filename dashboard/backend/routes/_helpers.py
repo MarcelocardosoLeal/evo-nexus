@@ -84,7 +84,7 @@ def _script_to_make_id(script_path: str) -> str:
         "github_review": "github", "linear_review": "linear",
         "faq_sync": "faq", "trends": "trends", "dashboard": "dashboard",
         "instagram_report": "instagram", "linkedin_report": "linkedin",
-        "youtube_report": "youtube",
+        "youtube_report": "youtube", "backup": "backup",
     }
     return _ID_MAP.get(name, name.replace("_", "-"))
 

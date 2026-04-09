@@ -326,6 +326,11 @@ make eod             # Run end-of-day consolidation
 make memory-lint     # Run memory health check (contradictions, stale data, gaps)
 make weekly          # Run weekly review
 
+# Backup & Restore
+make backup          # Export workspace data to local ZIP
+make backup-s3       # Export + upload to S3
+make restore FILE=<path>  # Restore from backup ZIP
+
 # Observability
 make logs            # Show latest JSONL log entries
 make metrics         # Show per-routine metrics (runs, cost, tokens)

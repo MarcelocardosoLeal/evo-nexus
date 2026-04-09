@@ -1,6 +1,6 @@
 {
   "name": "@evoapi/open-claude",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "Unofficial open source toolkit for Claude Code — AI-powered business operating system",
   "keywords": [
     "claude-code",

@@ -45,6 +45,9 @@ memory-lint:        ## 🔍 Memory health check — contradictions, gaps, stale 
 weekly:             ## 📊 Full weekly review (@clawdia)
 	$(PYTHON) $(ADW_DIR)/weekly_review.py
 
+backup-daily:       ## 💾 Daily backup routine (scheduled, systematic)
+	$(PYTHON) $(ADW_DIR)/backup.py
+
 # ── Dynamic Routine Runner ────────────────
 # Run any routine (core or custom) by its ID.
 # IDs are derived from script names. Use `make list-routines` to see all.
@@ -158,6 +161,18 @@ imessage-attach:    ## 📺 Connect to iMessage channel terminal (Ctrl+A D to de
 
 # ── Utilities ─────────────────────────────
 
+backup:             ## 💾 Backup workspace data (gitignored files) to local ZIP
+	$(PYTHON) backup.py backup
+
+backup-s3:          ## ☁️  Backup workspace data to local ZIP + S3 upload
+	$(PYTHON) backup.py backup --target s3
+
+restore:            ## 📥 Restore workspace from backup ZIP: make restore FILE=<path> [MODE=merge|replace]
+	$(PYTHON) backup.py restore $(FILE) --mode $(or $(MODE),merge)
+
+backup-list:        ## 📋 List available backups (local or S3: make backup-list TARGET=s3)
+	$(PYTHON) backup.py list --target $(or $(TARGET),local)
+
 logs:               ## 📝 Show latest logs (JSONL)
 	@tail -20 ADWs/logs/$$(ls -t ADWs/logs/*.jsonl 2>/dev/null | head -1) 2>/dev/null || echo "No logs yet."
 
@@ -206,5 +221,5 @@ docker-build:       ## 🐳 Build the image
 help:               ## 📖 Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' Makefile | sort | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: morning eod memory memory-lint weekly run list-routines daily scheduler dashboard-app telegram telegram-stop telegram-attach discord-channel discord-channel-stop discord-channel-attach imessage imessage-stop imessage-attach logs logs-detail logs-tail metrics clean-logs docker-dashboard docker-telegram docker-down docker-logs docker-run docker-build help docs-build setup team-strategy team-dashboard team-weekly
+.PHONY: morning eod memory memory-lint weekly run list-routines daily scheduler dashboard-app telegram telegram-stop telegram-attach discord-channel discord-channel-stop discord-channel-attach imessage imessage-stop imessage-attach backup backup-s3 restore backup-list backup-daily logs logs-detail logs-tail metrics clean-logs docker-dashboard docker-telegram docker-down docker-logs docker-run docker-build help docs-build setup team-strategy team-dashboard team-weekly
 .DEFAULT_GOAL := help

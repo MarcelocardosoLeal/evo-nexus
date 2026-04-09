@@ -1,6 +1,7 @@
 """SQLAlchemy models for OpenClaude dashboard."""
 
 import json
+import secrets
 from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -88,6 +89,7 @@ ALL_RESOURCES = {
     "routines": ["view", "execute"],
     "scheduler": ["view", "execute"],
     "tasks": ["view", "execute", "manage"],
+    "triggers": ["view", "execute", "manage"],
     "mempalace": ["view", "manage"],
 }
 
@@ -115,6 +117,7 @@ BUILTIN_ROLES = {
             "routines": ["view", "execute"],
             "scheduler": ["view", "execute"],
             "tasks": ["view", "execute"],
+            "triggers": ["view", "execute"],
             "mempalace": ["view"],
         },
     },
@@ -135,6 +138,7 @@ BUILTIN_ROLES = {
             "routines": ["view"],
             "scheduler": ["view"],
             "tasks": ["view"],
+            "triggers": ["view"],
             "mempalace": ["view"],
         },
     },
@@ -175,6 +179,104 @@ class ScheduledTask(db.Model):
             "result_summary": self.result_summary,
             "error": self.error,
             "created_by": self.created_by,
+        }
+
+
+class Trigger(db.Model):
+    __tablename__ = "triggers"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    slug = db.Column(db.String(200), unique=True, nullable=False)
+    type = db.Column(db.String(20), nullable=False)  # webhook, event
+    source = db.Column(db.String(50), nullable=False)  # github, linear, telegram, discord, stripe, custom
+    event_filter = db.Column(db.Text, nullable=True, default="{}")  # JSON filter config
+    action_type = db.Column(db.String(20), nullable=False)  # skill, prompt, script
+    action_payload = db.Column(db.Text, nullable=False)
+    agent = db.Column(db.String(50), nullable=True)
+    secret = db.Column(db.String(128), nullable=False)
+    enabled = db.Column(db.Boolean, default=True)
+    from_yaml = db.Column(db.Boolean, default=False)
+    remote_trigger_id = db.Column(db.String(100), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    executions = db.relationship("TriggerExecution", backref="trigger", lazy="dynamic", cascade="all, delete-orphan")
+
+    @staticmethod
+    def generate_secret():
+        return secrets.token_hex(32)
+
+    @property
+    def event_filter_dict(self) -> dict:
+        try:
+            return json.loads(self.event_filter) if self.event_filter else {}
+        except (json.JSONDecodeError, TypeError):
+            return {}
+
+    @event_filter_dict.setter
+    def event_filter_dict(self, value: dict):
+        self.event_filter = json.dumps(value)
+
+    def webhook_url(self, base_url: str = "") -> str:
+        return f"{base_url}/api/triggers/webhook/{self.id}"
+
+    def to_dict(self, include_secret=False):
+        d = {
+            "id": self.id,
+            "name": self.name,
+            "slug": self.slug,
+            "type": self.type,
+            "source": self.source,
+            "event_filter": self.event_filter_dict,
+            "action_type": self.action_type,
+            "action_payload": self.action_payload,
+            "agent": self.agent,
+            "enabled": self.enabled,
+            "from_yaml": self.from_yaml,
+            "remote_trigger_id": self.remote_trigger_id,
+            "created_by": self.created_by,
+            "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.created_at else None,
+            "updated_at": self.updated_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.updated_at else None,
+            "execution_count": self.executions.count() if self.executions else 0,
+        }
+        if include_secret:
+            d["secret"] = self.secret
+        return d
+
+
+class TriggerExecution(db.Model):
+    __tablename__ = "trigger_executions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    trigger_id = db.Column(db.Integer, db.ForeignKey("triggers.id", ondelete="CASCADE"), nullable=False)
+    event_data = db.Column(db.Text, nullable=True, default="{}")  # JSON payload received
+    status = db.Column(db.String(20), nullable=False, default="pending")  # pending, running, completed, failed
+    result_summary = db.Column(db.Text, nullable=True)
+    error = db.Column(db.Text, nullable=True)
+    duration_seconds = db.Column(db.Float, nullable=True)
+    started_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    completed_at = db.Column(db.DateTime, nullable=True)
+
+    @property
+    def event_data_dict(self) -> dict:
+        try:
+            return json.loads(self.event_data) if self.event_data else {}
+        except (json.JSONDecodeError, TypeError):
+            return {}
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "trigger_id": self.trigger_id,
+            "event_data": self.event_data_dict,
+            "status": self.status,
+            "result_summary": self.result_summary,
+            "error": self.error,
+            "duration_seconds": self.duration_seconds,
+            "started_at": self.started_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.started_at else None,
+            "completed_at": self.completed_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.completed_at else None,
         }
 
 

@@ -2,7 +2,7 @@
 
 Core routines are the backbone of the OpenClaude daily loop. They ship with the repo, are hardcoded in `scheduler.py`, and run automatically. Unlike custom routines (which live in `ADWs/routines/custom/` and are configured via `config/routines.yaml`), core routines require zero configuration.
 
-There are 5 core routines. Together they form a closed loop: **orient in the morning, work during the day, consolidate at night, sync memory, and review weekly**.
+There are 6 core routines. Together they form a closed loop: **orient in the morning, work during the day, consolidate at night, backup data, sync memory, and review weekly**.
 
 | Routine | Schedule | Agent | Make |
 |---------|----------|-------|------|
@@ -11,6 +11,39 @@ There are 5 core routines. Together they form a closed loop: **orient in the mor
 | Memory Sync | Daily 21:15 | @clawdia | `make memory` |
 | Memory Lint | Sunday 09:00 | @clawdia | `make memory-lint` |
 | Weekly Review | Friday 08:00 | @clawdia | `make weekly` |
+| Daily Backup | Daily 21:00 | systematic | `make backup-daily` |
+
+---
+
+## Daily Backup
+
+**Why it matters:** Gitignored data (memory, configs, logs, customizations, dashboard DB) is lost on clean installs or machine changes. This routine exports all user data as a ZIP, enabling portability without breaking `git pull` updates. If S3 is configured, it also uploads the backup to the cloud.
+
+**Execution:** Pure Python via `run_script()` (no AI, no tokens)
+**Timeout:** 5 minutes
+
+### What it does
+
+1. Collects all gitignored files using `git ls-files --others --ignored --exclude-standard`
+2. Filters out heavy reconstructible dirs (`node_modules/`, `.venv/`, `__pycache__/`, `dist/`)
+3. Creates a ZIP with `manifest.json` (version, timestamp, hostname, file list)
+4. Saves to `backups/openclaude-backup-YYYYMMDD-HHMMSS.zip`
+5. If `BACKUP_S3_BUCKET` env var is set, uploads the ZIP to S3
+
+### Output
+
+A ZIP file in `backups/` containing all workspace user data. Restorable via `make restore FILE=<path>`.
+
+### CLI
+
+```bash
+make backup           # Manual backup (local)
+make backup-s3        # Manual backup (local + S3)
+make restore FILE=<path> MODE=merge    # Restore (merge: skip existing)
+make restore FILE=<path> MODE=replace  # Restore (replace: overwrite all)
+make backup-list      # List available backups
+make backup-daily     # Run the daily backup routine
+```
 
 ---
 
@@ -175,6 +208,7 @@ The core routines form a continuous feedback loop:
       [you work, agents run, meetings happen]
          │
 21:00  End of Day ────> captures everything that happened
+21:00  Daily Backup ──> exports all user data as ZIP (+ S3 if configured)
 21:15  Memory Sync ───> extracts facts, updates memory system
          │
       [overnight]
@@ -192,6 +226,7 @@ Each routine feeds the next. Good Morning reads what End of Day wrote. Memory Sy
 ```bash
 make morning         # Good Morning
 make eod             # End of Day
+make backup-daily    # Daily Backup
 make memory          # Memory Sync
 make memory-lint     # Memory Lint
 make weekly          # Weekly Review

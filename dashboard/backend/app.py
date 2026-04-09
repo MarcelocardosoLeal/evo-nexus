@@ -50,6 +50,9 @@ with app.app_context():
     db.session.commit()
     seed_roles()
     seed_systems()
+    # Sync trigger definitions from YAML config
+    from routes.triggers import sync_triggers_from_yaml
+    sync_triggers_from_yaml()
 
 # --------------- Licensing (register-only, no heartbeat) ───
 from licensing import auto_register_if_needed
@@ -92,8 +95,8 @@ def auth_middleware():
     if path.startswith("/ws/"):
         return None
 
-    # Public API paths (exact match or prefix match for docs)
-    if path in PUBLIC_PATHS or path.startswith("/api/docs"):
+    # Public API paths (exact match or prefix match for docs/webhooks)
+    if path in PUBLIC_PATHS or path.startswith("/api/docs") or path.startswith("/api/triggers/webhook/"):
         return None
 
     # Setup redirect — if no users, only allow setup endpoints
@@ -124,6 +127,8 @@ from routes.systems import bp as systems_bp
 from routes.docs import bp as docs_bp
 from routes.mempalace import bp as mempalace_bp
 from routes.tasks import bp as tasks_bp
+from routes.triggers import bp as triggers_bp
+from routes.backups import bp as backups_bp
 
 app.register_blueprint(overview_bp)
 app.register_blueprint(reports_bp)
@@ -143,6 +148,8 @@ app.register_blueprint(systems_bp)
 app.register_blueprint(docs_bp)
 app.register_blueprint(mempalace_bp)
 app.register_blueprint(tasks_bp)
+app.register_blueprint(triggers_bp)
+app.register_blueprint(backups_bp)
 
 # --------------- Terminal WebSocket ---------------
 from routes.terminal import bp as terminal_bp, init_websocket

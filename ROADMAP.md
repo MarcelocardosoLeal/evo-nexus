@@ -68,7 +68,7 @@
 
 ### Routines & Scheduling
 
-- [ ] 🔥 **Trigger registry** — define and manage named triggers (webhook, cron, event-based) that invoke skills or routines
+- [x] 🔥 **Trigger registry** — define and manage named triggers (webhook, cron, event-based) that invoke skills or routines
 - [x] **Non-recurrent scheduled actions** — one-off scheduled tasks (e.g., "post this on LinkedIn Friday at 10am") without creating a full routine
 - [x] **Systematic routines** — pure Python routines via `run_script()` — no AI, no tokens, no cost. `create-routine` skill generates the code
 
@@ -78,8 +78,7 @@
 
 ### Import / Export
 
-- [ ] **Backup system** — export workspace state as ZIP (agents, skills, routines, memory, config); import to restore. Support local, git, and cloud bucket targets.
-- [ ] **Install via ZIP** — install skills, routines, and agents through the dashboard UI by uploading a ZIP. Includes malware and prompt injection scanning.
+- [x] **Backup system** — export workspace state as ZIP (agents, skills, routines, memory, config); import to restore. Support local, git, and cloud bucket targets.
 
 ---
 
@@ -92,7 +91,7 @@
 - [x] 🔥 **Public roadmap** — this file. Community input welcome via [discussions](https://github.com/EvolutionAPI/open-claude/discussions).
 - [x] **Telegram & Discord channels** — activate community channels, document in README and docs site.
 - [ ] **In-app tutorials** — contextual tutorials surfaced inside the dashboard, not just external docs.
-- [ ] **Resume Claude sessions in chat** — list active/resumable Claude sessions in dashboard chat with `--resume` support.
+- [x] **Resume Claude sessions in chat** — list active/resumable Claude sessions in dashboard chat with `--resume` support.
 
 ### Development
 

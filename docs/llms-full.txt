@@ -1279,6 +1279,8 @@ API clients in `.claude/skills/int-*/scripts/` that connect to external services
 
 The dashboard includes a built-in editor for the `.env` file, accessible from **Config** in the sidebar. This lets you manage API keys and integration settings without touching the terminal.
 
+![Config](../imgs/doc-config.png)
+
 Requires the `config:manage` permission (admin role by default).
 
 ## Two Editing Modes
@@ -1378,6 +1380,8 @@ The Knowledge Base page provides semantic search over your code, documentation, 
 > **GitHub:** [github.com/milla-jovovich/mempalace](https://github.com/milla-jovovich/mempalace) — MIT License, 27k+ stars
 
 Everything runs locally — no external APIs, no data leaves your machine.
+
+![Knowledge Base](../imgs/doc-knowledge.png)
 
 ## Enabling MemPalace
 
@@ -1555,6 +1559,14 @@ Metrics for each automated routine: total runs, success rate, average duration, 
 
 Create and manage one-off scheduled actions. Schedule a skill, prompt, or script to run at a specific date/time. Filter by status (pending, running, completed, failed), create new tasks, run immediately, or view results. See [Scheduled Tasks](../routines/scheduled-tasks.md) for details.
 
+![Tasks](../imgs/doc-tasks.png)
+
+### Triggers
+
+Reactive event triggers -- webhook and event-based. Create triggers that execute skills or routines in response to external events (GitHub push, Stripe payment, Linear updates). Filter by type (webhooks, events), status (enabled, disabled), and manage trigger configurations.
+
+![Triggers](../imgs/doc-triggers.png)
+
 ### Skills
 
 Browse all installed skills grouped by prefix (`social-`, `fin-`, `int-`, `prod-`, etc). Click a skill to see its full description, trigger conditions, and source file.
@@ -1573,6 +1585,12 @@ Start and stop background services (scheduler, Telegram bot) directly from the U
 
 ![Services](../imgs/doc-services.png)
 
+### Workspace
+
+Browse workspace reports and output files organized by domain (community, courses, daily-logs, finance, meetings, personal, projects, social, strategy). Navigate folders, filter files, and open reports directly from the dashboard.
+
+![Workspace](../imgs/doc-workspace.png)
+
 ### Memory
 
 Browse the two-tier memory system:
@@ -1580,9 +1598,13 @@ Browse the two-tier memory system:
 - **memory/** -- detailed files (people, projects, glossary, trends)
 - **Agent memory** -- per-agent context in `.claude/agent-memory/`
 
+![Memory](../imgs/doc-memory.png)
+
 ### Knowledge Base
 
 Optional semantic search powered by [MemPalace](https://github.com/milla-jovovich/mempalace). Enable it with one click, add directories (code, docs, notes) as sources, index them, and search by meaning -- not just keywords. Everything runs locally using ChromaDB vectors. See [knowledge-base.md](knowledge-base.md) for details.
+
+![Knowledge Base](../imgs/doc-knowledge.png)
 
 ### Integrations
 
@@ -1600,6 +1622,8 @@ Embedded Claude Code terminal powered by xterm.js + WebSocket. Run Claude Code c
 
 User management page (admin only). Create, edit, deactivate users. Assign roles. See last login timestamps.
 
+![Users](../imgs/doc-users.png)
+
 ### Roles
 
 Define custom roles with a granular permission matrix. Each role maps resources (chat, services, reports, etc.) to actions (view, execute, manage). Built-in roles (admin, operator, viewer) cannot be deleted but can be cloned.
@@ -1616,6 +1640,8 @@ Token usage and cost tracking per routine. Displays charts showing cost trends o
 
 Browse workspace files directly from the dashboard. Navigate the folder structure, preview file contents, and understand how the workspace is organized without needing terminal access.
 
+![Files](../imgs/doc-files.png)
+
 ### Scheduler
 
 Manage background services and scheduled routines. Shows all registered routines with core/custom badges, their schedules, enabled/disabled state, and last run status. Start, stop, or trigger routines from this page.
@@ -1624,7 +1650,15 @@ Manage background services and scheduled routines. Shows all registered routines
 
 Full audit trail of all actions: logins, config changes, routine executions, user management. Filterable by user, action, resource, and date range.
 
+![Audit Log](../imgs/doc-audit-log.png)
+
+### Backups
+
+Export and restore workspace data (all gitignored user files). Create local backups, download ZIPs, restore with merge or replace mode. Shows S3 configuration status when cloud backup is available. The daily backup routine runs automatically at 21:00.
+
 ### Config
+
+![Config](../imgs/doc-config.png)
 
 View and edit workspace configuration:
 - **CLAUDE.md** -- rendered markdown viewer
@@ -1689,6 +1723,8 @@ Built-in roles cannot be deleted, but you can create custom roles with any permi
 4. Click **Create**
 
 The new user can immediately log in at the dashboard URL.
+
+![User Management](../imgs/doc-users.png)
 
 ### First User (Setup Wizard)
 
@@ -5273,6 +5309,20 @@ All environment variables are defined in `.env` (generated by `make setup`). See
 
 **How to get**: [linkedin.com/developers](https://linkedin.com/developers) > My Apps > Create App > Auth tab. Request the `r_organization_social` and `r_liteprofile` scopes.
 
+## Backup (S3-compatible)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `BACKUP_S3_BUCKET` | For S3 backups | S3 bucket name (any S3-compatible: AWS, MinIO, R2) |
+| `BACKUP_S3_PREFIX` | No | Folder inside the bucket (default: `openclaude-backups/`) |
+| `AWS_ACCESS_KEY_ID` | For S3 backups | AWS credentials (or S3-compatible) |
+| `AWS_SECRET_ACCESS_KEY` | For S3 backups | AWS credentials (or S3-compatible) |
+| `AWS_ENDPOINT_URL` | For non-AWS | Custom endpoint for MinIO, Cloudflare R2, etc. |
+
+**How to get**: Create an S3 bucket (or use any S3-compatible service). Set the bucket name and credentials. Install `boto3` with `uv add boto3`.
+
+**Note**: Local backups (`make backup`) work without any env vars. S3 is optional for cloud replication.
+
 ## Social Accounts
 
 Social media accounts are managed via the dashboard Integrations page after OAuth setup. The tokens are stored with this pattern:
@@ -5313,6 +5363,8 @@ These are populated automatically when you connect accounts through the dashboar
 | Telegram notifications | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` |
 | Task management | `TODOIST_API_TOKEN` |
 | Licensing | No env vars (uses the licensing API directly) |
+| Daily backup (local) | None |
+| Daily backup (S3) | `BACKUP_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` |
 
 Google Calendar and Gmail are connected via MCP servers configured in Claude Code settings, not through `.env` variables.
 
@@ -5407,6 +5459,7 @@ These ship with the repo and run the essential daily loop:
 ```bash
 make morning         # Morning briefing -- agenda, emails, tasks (@clawdia)
 make eod             # End of day -- memory, logs, learnings (@clawdia)
+make backup-daily    # Daily backup -- export gitignored user data as ZIP (systematic)
 make memory          # Memory sync -- consolidate agent memory (@clawdia)
 make memory-lint     # Memory health check -- contradictions, gaps, stale data (@clawdia)
 make weekly          # Full weekly review (@clawdia)
@@ -5456,6 +5509,25 @@ make imessage-attach        # Attach to iMessage terminal (Ctrl+A D to detach)
 ```
 
 See [Channels Guide](../guides/channels.md) for full setup instructions.
+
+## Backup & Restore
+
+```bash
+make backup          # Export all gitignored user data to local ZIP (backups/)
+make backup-s3       # Export to local ZIP + upload to S3
+make restore FILE=<path>              # Restore from ZIP (default mode: merge)
+make restore FILE=<path> MODE=replace # Restore overwriting existing files
+make backup-list     # List local backups
+make backup-list TARGET=s3            # List S3 backups
+```
+
+Backup captures: memory, agent-memory, workspace data, config, dashboard DB, logs, custom agents/commands/templates/routines, `.env`. Excludes reconstructible dirs (`node_modules/`, `.venv/`, `dist/`).
+
+Restore modes:
+- **merge** (default): only restore files that don't exist locally
+- **replace**: overwrite everything with backup versions
+
+S3 requires `BACKUP_S3_BUCKET` in `.env` and `boto3` installed (`uv add boto3`).
 
 ## Observability
 
@@ -5627,7 +5699,7 @@ The setup wizard also generates these alongside `workspace.yaml`:
 
 Core routines are the backbone of the OpenClaude daily loop. They ship with the repo, are hardcoded in `scheduler.py`, and run automatically. Unlike custom routines (which live in `ADWs/routines/custom/` and are configured via `config/routines.yaml`), core routines require zero configuration.
 
-There are 5 core routines. Together they form a closed loop: **orient in the morning, work during the day, consolidate at night, sync memory, and review weekly**.
+There are 6 core routines. Together they form a closed loop: **orient in the morning, work during the day, consolidate at night, backup data, sync memory, and review weekly**.
 
 | Routine | Schedule | Agent | Make |
 |---------|----------|-------|------|
@@ -5636,6 +5708,39 @@ There are 5 core routines. Together they form a closed loop: **orient in the mor
 | Memory Sync | Daily 21:15 | @clawdia | `make memory` |
 | Memory Lint | Sunday 09:00 | @clawdia | `make memory-lint` |
 | Weekly Review | Friday 08:00 | @clawdia | `make weekly` |
+| Daily Backup | Daily 21:00 | systematic | `make backup-daily` |
+
+---
+
+## Daily Backup
+
+**Why it matters:** Gitignored data (memory, configs, logs, customizations, dashboard DB) is lost on clean installs or machine changes. This routine exports all user data as a ZIP, enabling portability without breaking `git pull` updates. If S3 is configured, it also uploads the backup to the cloud.
+
+**Execution:** Pure Python via `run_script()` (no AI, no tokens)
+**Timeout:** 5 minutes
+
+### What it does
+
+1. Collects all gitignored files using `git ls-files --others --ignored --exclude-standard`
+2. Filters out heavy reconstructible dirs (`node_modules/`, `.venv/`, `__pycache__/`, `dist/`)
+3. Creates a ZIP with `manifest.json` (version, timestamp, hostname, file list)
+4. Saves to `backups/openclaude-backup-YYYYMMDD-HHMMSS.zip`
+5. If `BACKUP_S3_BUCKET` env var is set, uploads the ZIP to S3
+
+### Output
+
+A ZIP file in `backups/` containing all workspace user data. Restorable via `make restore FILE=<path>`.
+
+### CLI
+
+```bash
+make backup           # Manual backup (local)
+make backup-s3        # Manual backup (local + S3)
+make restore FILE=<path> MODE=merge    # Restore (merge: skip existing)
+make restore FILE=<path> MODE=replace  # Restore (replace: overwrite all)
+make backup-list      # List available backups
+make backup-daily     # Run the daily backup routine
+```
 
 ---
 
@@ -5800,6 +5905,7 @@ The core routines form a continuous feedback loop:
       [you work, agents run, meetings happen]
          │
 21:00  End of Day ────> captures everything that happened
+21:00  Daily Backup ──> exports all user data as ZIP (+ S3 if configured)
 21:15  Memory Sync ───> extracts facts, updates memory system
          │
       [overnight]
@@ -5817,6 +5923,7 @@ Each routine feeds the next. Good Morning reads what End of Day wrote. Memory Sy
 ```bash
 make morning         # Good Morning
 make eod             # End of Day
+make backup-daily    # Daily Backup
 make memory          # Memory Sync
 make memory-lint     # Memory Lint
 make weekly          # Weekly Review

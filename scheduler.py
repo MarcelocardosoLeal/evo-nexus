@@ -57,6 +57,7 @@ def setup_schedule():
     # Disabled — replaced by Weekly Review (Team) in routines.yaml
     # schedule.every().friday.at("08:00").do(run_adw, "Weekly Review", "weekly_review.py")
     schedule.every().sunday.at("09:00").do(run_adw, "Memory Lint", "memory_lint.py")
+    schedule.every().day.at("21:00").do(run_adw, "Daily Backup", "backup.py")
 
     # ── Custom routines (from config/routines.yaml if exists) ──
     _load_custom_routines(schedule)
