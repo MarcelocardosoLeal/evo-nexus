@@ -133,7 +133,43 @@ async function main() {
   const targetDir = filteredArgs[0] || ".";
   const targetPath = resolve(process.cwd(), targetDir);
 
-  if (targetDir === ".") {
+  // Detect if target is an existing EvoNexus installation (git repo with pyproject.toml)
+  const isExistingInstall = existsSync(resolve(targetPath, ".git")) && existsSync(resolve(targetPath, "pyproject.toml"));
+
+  if (isExistingInstall) {
+    // ── Update mode ─────────────────────────────
+    console.log(`  ${GREEN}Existing EvoNexus installation detected.${RESET}\n`);
+
+    // Show current version
+    try {
+      const { readFileSync } = await import("fs");
+      const pyproject = readFileSync(resolve(targetPath, "pyproject.toml"), "utf-8");
+      const match = pyproject.match(/^version\s*=\s*"([^"]+)"/m);
+      if (match) console.log(`  Current version: ${DIM}${match[1]}${RESET}`);
+    } catch {}
+
+    // Stop running services before updating
+    console.log(`  ${DIM}Stopping services...${RESET}`);
+    try { run("pkill -f 'terminal-server/bin/server.js' 2>/dev/null || true", { cwd: targetPath }); } catch {}
+    try { run("pkill -f 'app.py' 2>/dev/null || true", { cwd: targetPath }); } catch {}
+
+    // Pull latest
+    console.log(`\n  ${BOLD}Pulling latest changes...${RESET}\n`);
+    run("git fetch origin", { cwd: targetPath });
+    // Detect current branch
+    const branch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: targetPath, encoding: "utf-8" }).trim();
+    run(`git pull origin ${branch}`, { cwd: targetPath });
+
+    // Show new version
+    try {
+      const { readFileSync } = await import("fs");
+      const pyproject = readFileSync(resolve(targetPath, "pyproject.toml"), "utf-8");
+      const match = pyproject.match(/^version\s*=\s*"([^"]+)"/m);
+      if (match) console.log(`\n  Updated to: ${GREEN}${BOLD}${match[1]}${RESET}`);
+    } catch {}
+
+    console.log();
+  } else if (targetDir === ".") {
     // Clone into current directory
     const { readdirSync } = await import("fs");
     const files = readdirSync(targetPath).filter(f => !f.startsWith("."));
@@ -176,7 +212,36 @@ async function main() {
     console.log(`\n  ${GREEN}✓${RESET} Frontend dependencies installed`);
   }
 
-  // ── Run setup wizard ───────────────────────
+  // ── Update mode: rebuild + restart, skip setup wizard ─────
+  if (isExistingInstall) {
+    console.log(`\n  ${DIM}Building dashboard frontend...${RESET}`);
+    try {
+      run("npm run build --silent", { cwd: frontendDir });
+      console.log(`  ${GREEN}✓${RESET} Dashboard rebuilt`);
+    } catch {
+      console.log(`  ${YELLOW}!${RESET} Frontend build failed — run: cd dashboard/frontend && npm run build`);
+    }
+
+    // Restart services if start-services.sh exists
+    const startScript = resolve(targetPath, "start-services.sh");
+    if (existsSync(startScript)) {
+      console.log(`\n  ${DIM}Restarting services...${RESET}`);
+      run(`bash ${startScript}`, { cwd: targetPath });
+      // Wait and verify
+      await new Promise(r => setTimeout(r, 3000));
+      try {
+        execSync("curl -sf http://localhost:8080/api/version", { timeout: 5000 });
+        console.log(`  ${GREEN}✓${RESET} Dashboard restarted`);
+      } catch {
+        console.log(`  ${YELLOW}!${RESET} Dashboard may not have started — check logs/dashboard.log`);
+      }
+    }
+
+    console.log(`\n  ${GREEN}${BOLD}EvoNexus updated successfully!${RESET}\n`);
+    process.exit(0);
+  }
+
+  // ── Run setup wizard (fresh install only) ─────
   console.log(`\n  ${BOLD}Starting setup wizard...${RESET}\n`);
 
   const pythonCmd = check("uv --version") ? "uv run python" : "python3";

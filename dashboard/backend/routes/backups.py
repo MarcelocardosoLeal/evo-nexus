@@ -158,6 +158,49 @@ def delete_backup(filename):
     return jsonify({"status": "deleted"})
 
 
+@bp.route("/api/backups/upload", methods=["POST"])
+def upload_backup():
+    """Import an external backup ZIP file into the local backups directory."""
+    denied = _require("config", "manage")
+    if denied:
+        return denied
+
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    f = request.files["file"]
+    if not f.filename or not f.filename.endswith(".zip"):
+        return jsonify({"error": "Only .zip files are accepted"}), 400
+
+    # Sanitize filename
+    import re
+    safe_name = re.sub(r"[^\w\-.]", "_", f.filename)
+    BACKUPS_DIR.mkdir(parents=True, exist_ok=True)
+    dest = BACKUPS_DIR / safe_name
+
+    # Prevent overwrite
+    if dest.exists():
+        return jsonify({"error": f"File {safe_name} already exists"}), 409
+
+    f.save(str(dest))
+
+    # Validate it's a real ZIP
+    import zipfile
+    try:
+        with zipfile.ZipFile(dest, "r") as zf:
+            zf.testzip()
+    except (zipfile.BadZipFile, Exception):
+        dest.unlink()
+        return jsonify({"error": "Invalid ZIP file"}), 400
+
+    audit(current_user, "upload", "backups", f"Imported backup {safe_name} ({dest.stat().st_size} bytes)")
+    return jsonify({
+        "status": "uploaded",
+        "filename": safe_name,
+        "size": dest.stat().st_size,
+    }), 201
+
+
 @bp.route("/api/backups/s3")
 def list_s3_backups():
     """List backup files stored in S3."""
@@ -175,7 +218,8 @@ def list_s3_backups():
         return jsonify({"backups": [], "error": "boto3 not installed"})
 
     try:
-        s3 = boto3.client("s3")
+        endpoint_url = os.environ.get("AWS_ENDPOINT_URL")
+        s3 = boto3.client("s3", endpoint_url=endpoint_url) if endpoint_url else boto3.client("s3")
         prefix = os.environ.get("BACKUP_S3_PREFIX", "")
         response = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
         backups = []
@@ -208,7 +252,8 @@ def download_s3_backup(key):
 
     try:
         import boto3
-        s3 = boto3.client("s3")
+        endpoint_url = os.environ.get("AWS_ENDPOINT_URL")
+        s3 = boto3.client("s3", endpoint_url=endpoint_url) if endpoint_url else boto3.client("s3")
         filename = key.rsplit("/", 1)[-1]
         local_path = BACKUPS_DIR / filename
         BACKUPS_DIR.mkdir(parents=True, exist_ok=True)

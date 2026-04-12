@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.3] - 2026-04-12
+
+### Added
+
+- **CLI update mode** — `npx @evoapi/evo-nexus@latest .` now detects existing installations and runs pull + rebuild + restart instead of failing with "directory already exists". Stops services before pull, rebuilds frontend, restarts via `start-services.sh`
+- **Backup import** — new "Importar" button in Backups page to upload external `.zip` backup files into the local backups list. Validates ZIP integrity before accepting
+- **S3-compatible storage support** — added `AWS_ENDPOINT_URL` and `BACKUP_S3_PREFIX` fields to the backup Storage Provider config panel for Cloudflare R2, Backblaze B2, MinIO, and any S3-compatible provider
+
+### Fixed
+
+- **`npx @evoapi/evo-nexus .` on existing repo** — no longer crashes with "fatal: destination path '.' already exists". Auto-detects `.git` + `pyproject.toml` and switches to update flow
+- **S3 client for non-AWS providers** — boto3 client now uses `AWS_ENDPOINT_URL` when set, enabling R2/Backblaze/MinIO connectivity
+
 ## [0.18.2] - 2026-04-12
 
 ### Added

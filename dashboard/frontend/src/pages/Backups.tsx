@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   HardDriveDownload, Plus, Download, RotateCcw, Trash2, RefreshCw,
   Cloud, HardDrive, AlertCircle, CheckCircle, Loader2, FileArchive,
-  ChevronDown, Eye, EyeOff, Save,
+  ChevronDown, Eye, EyeOff, Save, Upload,
 } from 'lucide-react'
 import { api } from '../lib/api'
 
@@ -48,7 +48,9 @@ const S3_FIELDS = [
   { envKey: 'BACKUP_S3_BUCKET', label: 'S3 Bucket', hint: 'Nome do bucket (ex: my-backups)', required: true, sensitive: false },
   { envKey: 'AWS_ACCESS_KEY_ID', label: 'Access Key ID', hint: 'IAM access key', required: true, sensitive: true },
   { envKey: 'AWS_SECRET_ACCESS_KEY', label: 'Secret Access Key', hint: 'IAM secret key', required: true, sensitive: true },
-  { envKey: 'AWS_DEFAULT_REGION', label: 'Region', hint: 'ex: us-east-1, sa-east-1', required: false, sensitive: false },
+  { envKey: 'AWS_DEFAULT_REGION', label: 'Region', hint: 'ex: us-east-1, sa-east-1, auto', required: false, sensitive: false },
+  { envKey: 'AWS_ENDPOINT_URL', label: 'Endpoint URL', hint: 'Para R2, Backblaze, MinIO (ex: https://xxx.r2.cloudflarestorage.com)', required: false, sensitive: false },
+  { envKey: 'BACKUP_S3_PREFIX', label: 'Prefix', hint: 'Prefixo das chaves no bucket (ex: backups/evonexus/)', required: false, sensitive: false },
 ]
 
 function S3ConfigPanel({ config, onSaved }: { config: BackupConfig; onSaved: () => void }) {
@@ -142,7 +144,8 @@ function S3ConfigPanel({ config, onSaved }: { config: BackupConfig; onSaved: () 
       {expanded && (
         <div className="px-4 pb-4 border-t border-[#21262d]">
           <p className="text-xs text-[#667085] mt-3 mb-4">
-            Configure S3 para backup remoto. Deixe vazio para usar apenas backup local.
+            Configure S3 para backup remoto. Compatível com AWS S3, Cloudflare R2, Backblaze B2, MinIO e qualquer storage S3-compatível.
+            Para providers não-AWS, preencha o <strong>Endpoint URL</strong>. Deixe tudo vazio para usar apenas backup local.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {S3_FIELDS.map(field => {
@@ -216,6 +219,8 @@ export default function Backups() {
   const [jobStatus, setJobStatus] = useState<string>('idle')
   const [showRestoreModal, setShowRestoreModal] = useState<string | null>(null)
   const [restoreMode, setRestoreMode] = useState<'merge' | 'replace'>('merge')
+  const [uploading, setUploading] = useState(false)
+  const uploadRef = { current: null as HTMLInputElement | null }
 
   const fetchS3 = useCallback(async () => {
     setS3Loading(true)
@@ -303,8 +308,48 @@ export default function Backups() {
     }
   }
 
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = '' // Reset input
+    if (!file.name.endsWith('.zip')) {
+      alert('Apenas arquivos .zip são aceitos')
+      return
+    }
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const base = import.meta.env.DEV ? 'http://localhost:8080' : ''
+      const res = await fetch(`${base}/api/backups/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        alert(data.error || 'Erro ao importar backup')
+        return
+      }
+      fetchData()
+    } catch {
+      alert('Erro ao importar backup')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   return (
     <div>
+      {/* Hidden file input for import */}
+      <input
+        ref={el => { uploadRef.current = el }}
+        type="file"
+        accept=".zip"
+        onChange={handleUpload}
+        className="hidden"
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
@@ -322,6 +367,14 @@ export default function Backups() {
             className="p-2 rounded-lg border border-[#21262d] text-[#667085] hover:text-[#e6edf3] hover:border-[#344054] transition-colors"
           >
             <RefreshCw size={16} />
+          </button>
+          <button
+            onClick={() => uploadRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#21262d] text-[#D0D5DD] hover:bg-[#161b22] transition-colors text-sm disabled:opacity-50"
+          >
+            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+            {uploading ? 'Importando...' : 'Importar'}
           </button>
           {config?.s3_configured && config?.boto3_available && (
             <button
