@@ -1,11 +1,16 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../lib/api'
-import { Shield, Plus, Pencil, Trash2, X, Check, Lock, Users, Code2 } from 'lucide-react'
+import { Shield, Plus, Pencil, Trash2, X, Check, Lock, Users, Code2, FolderOpen } from 'lucide-react'
 
 interface AgentAccess {
   mode: 'all' | 'none' | 'selected' | 'layer'
   agents?: string[]
   layers?: string[]
+}
+
+interface WorkspaceFolders {
+  mode: 'all' | 'none' | 'selected'
+  folders?: string[]
 }
 
 interface RoleData {
@@ -14,6 +19,7 @@ interface RoleData {
   description: string
   permissions: Record<string, string[]>
   agent_access: AgentAccess
+  workspace_folders: WorkspaceFolders
   is_builtin: boolean
 }
 
@@ -25,11 +31,13 @@ function countPermissions(perms: Record<string, string[]>): number {
 }
 
 const DEFAULT_AGENT_ACCESS: AgentAccess = { mode: 'all' }
+const DEFAULT_WORKSPACE_FOLDERS: WorkspaceFolders = { mode: 'all' }
 
 export default function Roles() {
   const [roles, setRoles] = useState<RoleData[]>([])
   const [resources, setResources] = useState<Resources>({})
   const [agentLayers, setAgentLayers] = useState<AgentLayers>({})
+  const [workspaceFolderList, setWorkspaceFolderList] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [editingRole, setEditingRole] = useState<RoleData | null>(null)
   const [creating, setCreating] = useState(false)
@@ -37,19 +45,22 @@ export default function Roles() {
   const [newDesc, setNewDesc] = useState('')
   const [editPerms, setEditPerms] = useState<Record<string, string[]>>({})
   const [editAgentAccess, setEditAgentAccess] = useState<AgentAccess>(DEFAULT_AGENT_ACCESS)
+  const [editWorkspaceFolders, setEditWorkspaceFolders] = useState<WorkspaceFolders>(DEFAULT_WORKSPACE_FOLDERS)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
   const fetchData = useCallback(async () => {
     try {
-      const [rolesData, resourcesData, agentLayersData] = await Promise.all([
+      const [rolesData, resourcesData, agentLayersData, wsFoldersData] = await Promise.all([
         api.get('/roles'),
         api.get('/roles/resources'),
         api.get('/roles/agent-layers'),
+        api.get('/roles/workspace-folders'),
       ])
       setRoles(Array.isArray(rolesData) ? rolesData : [])
       setResources(resourcesData || {})
       setAgentLayers(agentLayersData || {})
+      setWorkspaceFolderList(wsFoldersData?.folders || [])
     } catch {
       /* ignore */
     } finally {
@@ -63,6 +74,7 @@ export default function Roles() {
     setEditingRole(role)
     setEditPerms(JSON.parse(JSON.stringify(role.permissions)))
     setEditAgentAccess(JSON.parse(JSON.stringify(role.agent_access || DEFAULT_AGENT_ACCESS)))
+    setEditWorkspaceFolders(JSON.parse(JSON.stringify(role.workspace_folders || DEFAULT_WORKSPACE_FOLDERS)))
     setNewName(role.name)
     setNewDesc(role.description || '')
     setCreating(false)
@@ -73,6 +85,7 @@ export default function Roles() {
     setEditingRole(null)
     setEditPerms({})
     setEditAgentAccess(DEFAULT_AGENT_ACCESS)
+    setEditWorkspaceFolders(DEFAULT_WORKSPACE_FOLDERS)
     setNewName('')
     setNewDesc('')
     setCreating(true)
@@ -122,6 +135,7 @@ export default function Roles() {
           description: newDesc.trim(),
           permissions: editPerms,
           agent_access: editAgentAccess,
+          workspace_folders: editWorkspaceFolders,
         })
       } else if (editingRole) {
         await api.put(`/roles/${editingRole.id}`, {
@@ -129,6 +143,7 @@ export default function Roles() {
           description: newDesc.trim(),
           permissions: editPerms,
           agent_access: editAgentAccess,
+          workspace_folders: editWorkspaceFolders,
         })
       }
       closeEditor()
@@ -479,6 +494,97 @@ export default function Roles() {
                     </div>
                   )
                 })}
+              </div>
+            )}
+          </div>
+
+          {/* Workspace Folders section */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-[#e6edf3] mb-1 flex items-center gap-2">
+              <FolderOpen size={14} className="text-[#00FFA7]" />
+              Pastas do Workspace
+            </h3>
+            <p className="text-xs text-[#667085] mb-3">Define quais pastas de primeiro nível do workspace este role pode acessar.</p>
+
+            {/* Mode selector */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {([
+                { value: 'all', label: 'Todas' },
+                { value: 'selected', label: 'Selecionar pastas' },
+                { value: 'none', label: 'Nenhuma' },
+              ] as { value: WorkspaceFolders['mode']; label: string }[]).map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setEditWorkspaceFolders({ mode: value })}
+                  className={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+                    editWorkspaceFolders.mode === value
+                      ? 'bg-[#00FFA7]/10 border-[#00FFA7]/40 text-[#00FFA7]'
+                      : 'border-[#21262d] text-[#667085] hover:text-[#e6edf3] hover:border-[#30363d]'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Individual folder selector */}
+            {editWorkspaceFolders.mode === 'selected' && (
+              <div className="rounded-lg border border-[#21262d] overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 bg-[#0d1117]">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#667085]">
+                    <FolderOpen size={12} />
+                    Pastas disponíveis
+                  </div>
+                  <button
+                    onClick={() => {
+                      const allSelected = workspaceFolderList.every(f => (editWorkspaceFolders.folders || []).includes(f))
+                      setEditWorkspaceFolders({
+                        mode: 'selected',
+                        folders: allSelected ? [] : [...workspaceFolderList],
+                      })
+                    }}
+                    className="text-[10px] text-[#667085] hover:text-[#00FFA7] transition-colors"
+                  >
+                    {workspaceFolderList.every(f => (editWorkspaceFolders.folders || []).includes(f))
+                      ? 'Desmarcar todas'
+                      : 'Selecionar todas'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-1 p-2">
+                  {workspaceFolderList.map((folderName) => {
+                    const isSelected = (editWorkspaceFolders.folders || []).includes(folderName)
+                    const label = folderName
+                      .split('-')
+                      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                      .join(' ')
+                    return (
+                      <button
+                        key={folderName}
+                        onClick={() => {
+                          const current = editWorkspaceFolders.folders || []
+                          const next = isSelected
+                            ? current.filter((f) => f !== folderName)
+                            : [...current, folderName]
+                          setEditWorkspaceFolders({ mode: 'selected', folders: next })
+                        }}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition-colors ${
+                          isSelected
+                            ? 'bg-[#00FFA7]/8 border-[#00FFA7]/20 text-[#e6edf3]'
+                            : 'border-[#21262d] text-[#667085] hover:border-[#30363d] hover:text-[#e6edf3]'
+                        }`}
+                      >
+                        <div
+                          className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                            isSelected ? 'bg-[#00FFA7] border-[#00FFA7]' : 'border-[#21262d]'
+                          }`}
+                        >
+                          {isSelected && <Check size={10} className="text-[#0d1117]" />}
+                        </div>
+                        <span className="text-[11px] truncate">{label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>

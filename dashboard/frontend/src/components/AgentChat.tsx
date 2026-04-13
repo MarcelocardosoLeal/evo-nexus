@@ -778,10 +778,10 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
   let parsedInput: any = null
   try { parsedInput = JSON.parse(block.input) } catch {}
 
-  // Detect Agent tool — render special subagent card
-  const isAgentTool = block.toolName === 'Agent'
-  const subagentName = parsedInput?.subagent_type || parsedInput?.name || ''
-  const subagentDesc = parsedInput?.description || block.subagentType || ''
+  // Detect Agent/SendMessage tools — render special subagent card
+  const isAgentTool = block.toolName === 'Agent' || block.toolName === 'SendMessage'
+  const subagentName = parsedInput?.subagent_type || parsedInput?.name || parsedInput?.to || ''
+  const subagentDesc = parsedInput?.description || parsedInput?.summary || block.subagentType || ''
 
   if (isAgentTool) {
     const isRunning = block.subagentStatus === 'running'
@@ -796,14 +796,21 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
           {open ? <ChevronDown size={12} className="text-[#667085]" /> : <ChevronRight size={12} className="text-[#667085]" />}
 
           {/* Subagent avatar */}
-          {subagentName ? (
-            <AgentAvatar name={subagentName.replace('custom-', '')} size={20} />
-          ) : (
-            <FileCode size={13} style={{ color: accentColor }} />
-          )}
+          {(() => {
+            const isUuid = /^[0-9a-f]{8,}$/i.test(subagentName)
+            const displayName = isUuid ? '' : subagentName
+            return displayName ? (
+              <AgentAvatar name={displayName.replace('custom-', '')} size={20} />
+            ) : (
+              <FileCode size={13} style={{ color: accentColor }} />
+            )
+          })()}
 
           <span className="font-medium text-[#e6edf3]">
-            {subagentName ? `@${subagentName}` : 'Agent'}
+            {(() => {
+              const isUuid = /^[0-9a-f]{8,}$/i.test(subagentName)
+              return isUuid ? (block.toolName === 'SendMessage' ? 'SendMessage' : 'Agent') : subagentName ? `@${subagentName}` : block.toolName
+            })()}
           </span>
           {subagentDesc && (
             <span className="text-[#8b949e] truncate max-w-[300px] text-[11px]">{subagentDesc}</span>

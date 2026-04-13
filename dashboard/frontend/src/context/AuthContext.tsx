@@ -18,6 +18,11 @@ interface AgentAccess {
   layers?: string[]
 }
 
+interface WorkspaceFolders {
+  mode: 'all' | 'none' | 'selected'
+  folders?: string[]
+}
+
 // Map agent name → layer (mirrors backend AGENT_LAYERS)
 const AGENT_LAYERS: Record<string, string> = {
   'clawdia-assistant': 'business',
@@ -65,11 +70,13 @@ interface AuthContextType {
   loading: boolean
   permissions: Permissions
   agentAccess: AgentAccess
+  workspaceFolders: WorkspaceFolders
   needsSetup: boolean
   login: (username: string, password: string) => Promise<void>
   logout: () => Promise<void>
   hasPermission: (resource: string, action: string) => boolean
   hasAgentAccess: (agentName: string) => boolean
+  hasWorkspaceFolderAccess: (folder: string) => boolean
   refreshUser: () => Promise<void>
 }
 
@@ -85,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [permissions, setPermissions] = useState<Permissions>({})
   const [agentAccess, setAgentAccess] = useState<AgentAccess>({ mode: 'all' })
+  const [workspaceFolders, setWorkspaceFolders] = useState<WorkspaceFolders>({ mode: 'all' })
   const [loading, setLoading] = useState(true)
   const [needsSetup, setNeedsSetup] = useState(false)
 
@@ -96,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null)
         setPermissions({})
         setAgentAccess({ mode: 'all' })
+        setWorkspaceFolders({ mode: 'all' })
         return
       }
       setNeedsSetup(false)
@@ -104,10 +113,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(meRes.user)
       setPermissions(meRes.permissions || {})
       setAgentAccess(meRes.agent_access || { mode: 'all' })
+      setWorkspaceFolders(meRes.workspace_folders || { mode: 'all' })
     } catch {
       setUser(null)
       setPermissions({})
       setAgentAccess({ mode: 'all' })
+      setWorkspaceFolders({ mode: 'all' })
     }
   }, [])
 
@@ -126,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setPermissions({})
     setAgentAccess({ mode: 'all' })
+    setWorkspaceFolders({ mode: 'all' })
   }, [])
 
   const hasPermission = useCallback((resource: string, action: string) => {
@@ -147,9 +159,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return true
   }, [user, agentAccess])
 
+  const hasWorkspaceFolderAccess = useCallback((folder: string): boolean => {
+    if (user?.role === 'admin') return true
+    const { mode, folders } = workspaceFolders
+    if (mode === 'all') return true
+    if (mode === 'none') return false
+    if (mode === 'selected') {
+      if (!folders || folders.length === 0) return false
+      return folders.includes(folder)
+    }
+    return true
+  }, [user, workspaceFolders])
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, permissions, agentAccess, needsSetup, login, logout, hasPermission, hasAgentAccess, refreshUser }}
+      value={{ user, loading, permissions, agentAccess, workspaceFolders, needsSetup, login, logout, hasPermission, hasAgentAccess, hasWorkspaceFolderAccess, refreshUser }}
     >
       {children}
     </AuthContext.Provider>

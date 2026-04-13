@@ -142,10 +142,12 @@ BUILTIN_ROLES = {
         "description": "Full access to all resources",
         "permissions": {r: actions[:] for r, actions in ALL_RESOURCES.items()},
         "agent_access": {"mode": "all"},
+        "workspace_folders": {"mode": "all"},
     },
     "operator": {
         "description": "Can view and execute, but not manage users or audit",
         "agent_access": {"mode": "all"},
+        "workspace_folders": {"mode": "all"},
         "permissions": {
             "chat": ["view", "execute"],
             "services": ["view", "execute"],
@@ -168,6 +170,7 @@ BUILTIN_ROLES = {
     "viewer": {
         "description": "Read-only access to dashboards",
         "agent_access": {"mode": "none"},
+        "workspace_folders": {"mode": "all"},
         "permissions": {
             "workspace": ["view"],
             "agents": ["view"],
@@ -395,6 +398,7 @@ class Role(db.Model):
     description = db.Column(db.String(200))
     permissions_json = db.Column(db.Text, nullable=False, default="{}")
     agent_access_json = db.Column(db.Text, nullable=True, default='{"mode": "all"}')
+    workspace_folders_json = db.Column(db.Text, nullable=True, default='{"mode": "all"}')
     is_builtin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -421,6 +425,18 @@ class Role(db.Model):
     def agent_access(self, value: dict):
         self.agent_access_json = json.dumps(value)
 
+    @property
+    def workspace_folders(self) -> dict:
+        try:
+            result = json.loads(self.workspace_folders_json) if self.workspace_folders_json else None
+            return result if result else {"mode": "all"}
+        except (json.JSONDecodeError, TypeError):
+            return {"mode": "all"}
+
+    @workspace_folders.setter
+    def workspace_folders(self, value: dict):
+        self.workspace_folders_json = json.dumps(value)
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -428,6 +444,7 @@ class Role(db.Model):
             "description": self.description,
             "permissions": self.permissions,
             "agent_access": self.agent_access,
+            "workspace_folders": self.workspace_folders,
             "is_builtin": self.is_builtin,
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.created_at else None,
         }
@@ -460,6 +477,11 @@ def seed_roles():
             if existing.agent_access_json is None:
                 existing.agent_access = config.get("agent_access", {"mode": "all"})
             # --- fim migração ---
+
+            # --- Migração workspace_folders: set default for existing roles ---
+            if existing.workspace_folders_json is None:
+                existing.workspace_folders = config.get("workspace_folders", {"mode": "all"})
+            # --- fim migração ---
         else:
             role = Role(
                 name=name,
@@ -468,6 +490,7 @@ def seed_roles():
             )
             role.permissions = config["permissions"]
             role.agent_access = config.get("agent_access", {"mode": "all"})
+            role.workspace_folders = config.get("workspace_folders", {"mode": "all"})
             db.session.add(role)
     db.session.commit()
 
@@ -535,6 +558,65 @@ def has_agent_access(role_name: str, agent_name: str) -> bool:
         layers = config.get("layers", [])
         agent_layer = AGENT_LAYERS.get(agent_name)
         return agent_layer is not None and agent_layer in layers
+    # Unknown mode — default to all
+    return True
+
+
+def get_role_workspace_folders(role_name: str) -> dict:
+    """Get workspace_folders config for a role from DB, fallback to builtin defaults."""
+    role = Role.query.filter_by(name=role_name).first()
+    if role:
+        return role.workspace_folders
+    builtin = BUILTIN_ROLES.get(role_name)
+    if builtin:
+        return builtin.get("workspace_folders", {"mode": "all"})
+    return {"mode": "all"}
+
+
+def has_workspace_folder_access(role_name: str, path: str) -> bool:
+    """Check if a role has access to a specific workspace folder.
+
+    Only enforces top-level folder access (e.g. workspace/finance/).
+    Subfolders inherit parent access.
+
+    NOTE: This check applies only to the Flask API workspace endpoints.
+    Terminal-server / agent sessions (Claude Code CLI) do NOT enforce folder
+    restrictions — they bypass the Flask API entirely. This is a known
+    limitation to be addressed in a future iteration.
+
+    Args:
+        role_name: The role name string.
+        path: A repo-relative path string (e.g. "workspace/finance/report.md").
+
+    Returns:
+        True if access is allowed, False otherwise.
+    """
+    if role_name == "admin":
+        return True
+
+    parts = path.strip("/").split("/")
+
+    # Root "workspace" listing — always allowed (filtering happens on children)
+    if len(parts) == 0 or parts[0] != "workspace":
+        return True  # Non-workspace paths are unaffected by folder permissions
+    if len(parts) < 2 or parts[1] == "":
+        return True  # Browsing workspace root is allowed; children are filtered
+
+    folder = parts[1]
+
+    config = get_role_workspace_folders(role_name)
+    mode = config.get("mode", "all")
+
+    if mode == "all":
+        return True
+    if mode == "none":
+        return False
+    if mode == "selected":
+        folders = config.get("folders", [])
+        # Empty selected list behaves as none
+        if not folders:
+            return False
+        return folder in [f.strip("/") for f in folders]
     # Unknown mode — default to all
     return True
 

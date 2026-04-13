@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2026-04-13
+
+### Added
+
+- **Workspace folder permissions** — roles can now restrict access to specific workspace folders (finance, marketing, personal, etc.). Three modes: All, Selected (checkbox grid), None. Admin always bypasses. Enforced on all workspace browser endpoints: tree, read, write, create, rename, delete, upload, download, recent, and file share creation
+- **Role editor UI for folder access** — Settings → Roles now has a "Pastas do Workspace" section with radio buttons for mode and a dynamic checkbox grid that scans existing folders from disk
+- **Dynamic folder scan endpoint** — `GET /api/roles/workspace-folders` lists all top-level directories under `workspace/` without hardcoding
+- **SendMessage tool card** — chat UI now renders `SendMessage` tool calls with subagent avatar and description, same as Agent tool cards
+
+### Fixed
+
+- **SQLite auto-migration** — added `ALTER TABLE roles ADD COLUMN workspace_folders_json` to `app.py` startup migration, preventing crash on existing databases
+- **Chat textarea height** — input area resets to single line after sending (carried over from v0.19.1)
+
 ## [0.19.1] - 2026-04-13
 
 ### Added

@@ -8,7 +8,7 @@ from pathlib import Path
 from flask import Blueprint, jsonify, request, Response
 from flask_login import login_required, current_user
 
-from models import db, FileShare, audit
+from models import db, FileShare, audit, has_workspace_folder_access
 from routes.auth_routes import require_permission
 
 bp = Blueprint("shares", __name__)
@@ -89,6 +89,10 @@ def create_share():
         return jsonify({"error": "Invalid or disallowed path", "code": "bad_path"}), 400
     if not full.exists() or not full.is_file():
         return jsonify({"error": "File not found", "code": "not_found"}), 404
+
+    # Enforce folder access before creating a share
+    if not has_workspace_folder_access(current_user.role, path):
+        return jsonify({"error": "Access to this workspace folder is restricted", "code": "forbidden"}), 403
 
     # Calculate expiry
     expires_at = None

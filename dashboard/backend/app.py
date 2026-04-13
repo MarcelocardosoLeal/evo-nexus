@@ -58,6 +58,9 @@ with app.app_context():
     if "agent_access_json" not in _existing_cols:
         _cur.execute("ALTER TABLE roles ADD COLUMN agent_access_json TEXT DEFAULT '{\"mode\": \"all\"}'")
         _conn.commit()
+    if "workspace_folders_json" not in _existing_cols:
+        _cur.execute("ALTER TABLE roles ADD COLUMN workspace_folders_json TEXT DEFAULT '{\"mode\": \"all\"}'")
+        _conn.commit()
 
     # Fix corrupted datetime columns (NULL or non-string values crash SQLAlchemy)
     for _tbl, _col in [("roles", "created_at"), ("users", "created_at"), ("users", "last_login")]:

@@ -11,7 +11,7 @@ from pathlib import Path
 from flask import Blueprint, jsonify, request, abort, send_file, current_app
 from flask_login import login_required, current_user
 
-from models import has_permission
+from models import has_permission, has_workspace_folder_access
 from routes.auth_routes import require_permission
 
 bp = Blueprint("workspace", __name__)
@@ -186,6 +186,23 @@ def _is_blocklisted(name: str) -> bool:
     return False
 
 
+def _check_folder_access(path_str: str):
+    """Abort 403 if user's role cannot access this workspace folder.
+
+    Only enforced for paths inside WORKSPACE_DIR. Admin paths are skipped
+    (they are gated by config:manage permission already).
+    """
+    if not current_user.is_authenticated:
+        return
+    # Only enforce for workspace/ paths
+    parts = path_str.strip("/").split("/")
+    if not parts or parts[0] != "workspace":
+        return
+    if not has_workspace_folder_access(current_user.role, path_str):
+        _audit("denied", path_str, result="denied", reason="folder_restricted")
+        abort(403, description="Access to this workspace folder is restricted")
+
+
 # ── Endpoints ──────────────────────────────────────────────────────────────
 
 @bp.route("/api/workspace/tree")
@@ -236,6 +253,16 @@ def workspace_tree():
 
     entries = _build_entries(full, depth)
 
+    # Filter top-level workspace folders based on role access
+    rel_check = _repo_rel(full)
+    if rel_check == "workspace" and current_user.is_authenticated:
+        entries = [
+            e for e in entries
+            if not e.get("is_dir") or has_workspace_folder_access(
+                current_user.role, f"workspace/{e['name']}"
+            )
+        ]
+
     # Build breadcrumbs from repo-rel path
     rel = _repo_rel(full)
     parts = [p for p in rel.split("/") if p]
@@ -266,6 +293,7 @@ def workspace_file_read():
         (REPO_ROOT / path).resolve(), WORKSPACE_DIR.resolve()
     )
     full = _resolve_safe(path, require_admin=require_admin)
+    _check_folder_access(_repo_rel(full))
 
     if not full.exists():
         return jsonify({"error": "File not found", "code": "not_found"}), 404
@@ -314,6 +342,7 @@ def workspace_file_write():
         (REPO_ROOT / path).resolve(), WORKSPACE_DIR.resolve()
     )
     full = _resolve_safe(path, require_admin=require_admin)
+    _check_folder_access(_repo_rel(full))
 
     if full.is_dir():
         return jsonify({"error": "Path is a directory", "code": "bad_path"}), 409
@@ -351,6 +380,7 @@ def workspace_file_create():
         (REPO_ROOT / path).resolve(), WORKSPACE_DIR.resolve()
     )
     full = _resolve_safe(path, require_admin=require_admin)
+    _check_folder_access(_repo_rel(full))
 
     if full.exists():
         return jsonify({"error": "File already exists", "code": "conflict"}), 409
@@ -385,6 +415,7 @@ def workspace_folder_create():
         (REPO_ROOT / path).resolve(), WORKSPACE_DIR.resolve()
     )
     full = _resolve_safe(path, require_admin=require_admin)
+    _check_folder_access(_repo_rel(full))
 
     if full.exists():
         return jsonify({"error": "Directory already exists", "code": "conflict"}), 409
@@ -422,6 +453,8 @@ def workspace_rename():
     )
     full_from = _resolve_safe(from_path, require_admin=require_admin)
     full_to = _resolve_safe(to_path, require_admin=require_admin)
+    _check_folder_access(_repo_rel(full_from))
+    _check_folder_access(_repo_rel(full_to))
 
     if not full_from.exists():
         return jsonify({"error": "Source not found", "code": "not_found"}), 404
@@ -456,6 +489,7 @@ def workspace_file_delete():
         (REPO_ROOT / path).resolve(), WORKSPACE_DIR.resolve()
     )
     full = _resolve_safe(path, require_admin=require_admin)
+    _check_folder_access(_repo_rel(full))
 
     if not full.exists():
         return jsonify({"error": "File not found", "code": "not_found"}), 404
@@ -515,6 +549,7 @@ def workspace_upload():
         (REPO_ROOT / path).resolve(), WORKSPACE_DIR.resolve()
     )
     dir_full = _resolve_safe(path, require_admin=require_admin)
+    _check_folder_access(_repo_rel(dir_full))
 
     if not dir_full.is_dir():
         return jsonify({"error": "Target path is not a directory", "code": "bad_path"}), 400
@@ -549,6 +584,7 @@ def workspace_download():
         (REPO_ROOT / path).resolve(), WORKSPACE_DIR.resolve()
     )
     full = _resolve_safe(path, require_admin=require_admin)
+    _check_folder_access(_repo_rel(full))
 
     if not full.exists():
         return jsonify({"error": "File not found", "code": "not_found"}), 404
@@ -585,7 +621,11 @@ def workspace_recent():
             continue
         if _is_blocklisted(f.name):
             continue
-        if any(_is_blocklisted(part) for part in f.relative_to(WORKSPACE_DIR).parts):
+        rel_parts = f.relative_to(WORKSPACE_DIR).parts
+        if any(_is_blocklisted(part) for part in rel_parts):
+            continue
+        # Enforce folder access: check top-level folder
+        if rel_parts and not has_workspace_folder_access(current_user.role, f"workspace/{rel_parts[0]}"):
             continue
         try:
             stat = f.stat()

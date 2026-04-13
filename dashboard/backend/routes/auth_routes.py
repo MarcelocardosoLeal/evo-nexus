@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from functools import wraps
 from flask import Blueprint, request, jsonify, abort
 from flask_login import login_user, logout_user, login_required, current_user
-from models import db, User, AuditLog, Role, has_permission, audit, needs_setup, get_role_permissions, get_role_agent_access, ALL_RESOURCES, AGENT_LAYERS
+from models import db, User, AuditLog, Role, has_permission, audit, needs_setup, get_role_permissions, get_role_agent_access, get_role_workspace_folders, ALL_RESOURCES, AGENT_LAYERS
 
 bp = Blueprint("auth", __name__)
 
@@ -189,10 +189,12 @@ def logout():
 def me():
     perms = get_role_permissions(current_user.role)
     agent_access = get_role_agent_access(current_user.role)
+    workspace_folders = get_role_workspace_folders(current_user.role)
     return jsonify({
         "user": current_user.to_dict(),
         "permissions": perms,
         "agent_access": agent_access,
+        "workspace_folders": workspace_folders,
     })
 
 
@@ -350,6 +352,28 @@ def list_agent_layers():
     return jsonify(AGENT_LAYERS)
 
 
+@bp.route("/api/roles/workspace-folders")
+@login_required
+@require_permission("users", "view")
+def list_workspace_folders():
+    """Return sorted list of top-level workspace folder names from disk."""
+    import os
+    from pathlib import Path
+    workspace_path = Path(__file__).resolve().parents[3] / "workspace"
+    folders = []
+    if workspace_path.is_dir():
+        blocklist = {
+            ".git", "node_modules", "dist", ".venv", "__pycache__",
+            "backups", ".mypy_cache", ".pytest_cache", "target", "build",
+            ".next", ".turbo", "coverage", ".trash",
+        }
+        for name in sorted(os.listdir(workspace_path)):
+            full = workspace_path / name
+            if full.is_dir() and not name.startswith('.') and name not in blocklist:
+                folders.append(name)
+    return jsonify({"folders": folders})
+
+
 @bp.route("/api/roles", methods=["POST"])
 @login_required
 @require_permission("users", "manage")
@@ -369,6 +393,7 @@ def create_role():
     role = Role(name=name, description=description)
     role.permissions = permissions
     role.agent_access = data.get("agent_access", {"mode": "all"})
+    role.workspace_folders = data.get("workspace_folders", {"mode": "all"})
     db.session.add(role)
     db.session.commit()
 
@@ -389,6 +414,8 @@ def update_role(role_id):
         role.permissions = data["permissions"]
     if "agent_access" in data:
         role.agent_access = data["agent_access"]
+    if "workspace_folders" in data:
+        role.workspace_folders = data["workspace_folders"]
     if "name" in data and not role.is_builtin:
         new_name = data["name"].strip().lower()
         if new_name != role.name and Role.query.filter_by(name=new_name).first():
