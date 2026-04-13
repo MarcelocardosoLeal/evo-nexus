@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.5] - 2026-04-13
+
+### Fixed
+
+- **Flask survives systemd restart** — `pkill` pattern changed from `dashboard/backend.*app.py` to `python.*app.py`. The `cd dashboard/backend` changes CWD but the process cmdline stays `python app.py`, so the old pattern never matched and Flask kept running with stale code across restarts
+
 ## [0.20.4] - 2026-04-13
 
 ### Fixed
