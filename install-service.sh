@@ -72,6 +72,13 @@ cat > "$SERVICE_DIR/start-services.sh" << STARTEOF
 export PATH="/usr/local/bin:/usr/bin:/bin:\$HOME/.local/bin"
 cd $SERVICE_DIR
 
+# Load environment variables
+if [ -f .env ]; then
+  set -a
+  source .env
+  set +a
+fi
+
 # Kill existing services (including scheduler)
 pkill -f 'terminal-server/bin/server.js' 2>/dev/null
 pkill -f 'python.*app.py' 2>/dev/null
