@@ -439,6 +439,20 @@ class TerminalServer {
                     return; // Don't forward internal event
                   }
 
+                  // Forward permission requests to the WebSocket client.
+                  if (msg.type === 'permission_request') {
+                    this.broadcastToSession(wsInfo.claudeSessionId, {
+                      type: 'permission_request',
+                      sessionId: wsInfo.claudeSessionId,
+                      requestId: msg.requestId,
+                      toolName: msg.toolName,
+                      input: msg.input,
+                      title: msg.title || null,
+                      description: msg.description || null,
+                    });
+                    return;
+                  }
+
                   // Auto-bind session to a ticket when the agent creates one.
                   // Only binds if not already bound — doesn't overwrite user's manual pick.
                   if (msg.type === 'ticket_detected' && msg.ticketId) {
@@ -533,6 +547,12 @@ class TerminalServer {
           await this.chatBridge.stopSession(wsInfo.claudeSessionId);
           const s = this.claudeSessions.get(wsInfo.claudeSessionId);
           if (s) s.active = false;
+        }
+        break;
+
+      case 'permission_response':
+        if (wsInfo.claudeSessionId && data.requestId !== undefined) {
+          this.chatBridge.respondToApproval(wsInfo.claudeSessionId, data.requestId, !!data.approved);
         }
         break;
 

@@ -8,6 +8,18 @@ const path = require('path');
 const os = require('os');
 let sdkModule = null;
 
+// Tools that run silently without user confirmation.
+const AUTO_APPROVE = new Set([
+  'Read', 'Glob', 'Grep', 'WebFetch', 'WebSearch', 'ToolSearch',
+  'NotebookRead', 'Skill',
+]);
+
+// Tools that require explicit user approval before execution.
+// Any tool NOT in either set also requires approval (conservative default).
+const NEEDS_APPROVAL = new Set([
+  'Write', 'Edit', 'Bash', 'NotebookEdit', 'Agent',
+]);
+
 /**
  * Parse a .claude/agents/{name}.md file into an AgentDefinition.
  * Extracts YAML frontmatter for metadata and the body as the prompt.
@@ -192,6 +204,10 @@ class ChatBridge {
         runtimeLines.push(`- Current chat session id: ${sessionId}`);
         runtimeLines.push('');
         runtimeLines.push('When you create a ticket via `evo.post("/api/tickets", {...})`, include `source_agent: "' + agentName + '"` and `source_session_id: "' + sessionId + '"` in the payload so the ticket records who created it.');
+        runtimeLines.push('');
+        runtimeLines.push('## Tool permission policy');
+        runtimeLines.push('Read/Glob/Grep/WebFetch/ToolSearch/Skill run automatically.');
+        runtimeLines.push('Write/Edit/Bash/Agent/NotebookEdit need user approval per call — the UI shows a card with Allow/Deny buttons. Don\'t ask for permission in text; just call the tool and the user will respond in the UI.');
 
         const runtimeBlock = runtimeLines.join('\n');
 
@@ -213,6 +229,35 @@ class ChatBridge {
       'Agent', 'Skill', 'WebSearch', 'WebFetch',
       'NotebookEdit', 'ToolSearch',
     ];
+
+    // Per-tool approval callback — auto-approve read-only tools, ask user for mutating tools.
+    queryOptions.canUseTool = async (toolName, input, sdkOptions) => {
+      if (AUTO_APPROVE.has(toolName)) {
+        return { behavior: 'allow' };
+      }
+      // Use SDK-provided toolUseID as the stable request identifier.
+      const requestId = sdkOptions.toolUseID || `req-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const currentSession = this.sessions.get(sessionId);
+      if (!currentSession || !currentSession.active) {
+        return { behavior: 'deny', message: 'Session is no longer active.' };
+      }
+      // Wait for user's decision via respondToApproval().
+      const decision = await new Promise((resolve) => {
+        if (!currentSession.pendingApprovals) currentSession.pendingApprovals = new Map();
+        currentSession.pendingApprovals.set(requestId, resolve);
+        if (onMessage) {
+          onMessage({
+            type: 'permission_request',
+            requestId,
+            toolName,
+            input,
+            title: sdkOptions.title || null,
+            description: sdkOptions.description || null,
+          });
+        }
+      });
+      return decision;
+    };
 
     // Enable subagent progress summaries
     queryOptions.agentProgressSummaries = true;
@@ -328,11 +373,36 @@ class ChatBridge {
 
     const sdkSessionId = session.sdkSessionId;
     session.active = false;
+    // Deny all pending approval requests so awaiting canUseTool promises resolve.
+    if (session.pendingApprovals && session.pendingApprovals.size > 0) {
+      for (const resolve of session.pendingApprovals.values()) {
+        resolve({ behavior: 'deny', message: 'Session stopped by user.' });
+      }
+      session.pendingApprovals.clear();
+    }
     try {
       session.abortController.abort();
     } catch {}
     this.sessions.delete(sessionId);
     return { sdkSessionId };
+  }
+
+  /**
+   * Resolve a pending tool approval request.
+   * Called by server.js when the user clicks Allow/Deny in the UI.
+   */
+  respondToApproval(sessionId, requestId, approved) {
+    const session = this.sessions.get(sessionId);
+    if (!session?.pendingApprovals) return false;
+    const resolve = session.pendingApprovals.get(requestId);
+    if (!resolve) return false;
+    session.pendingApprovals.delete(requestId);
+    resolve(
+      approved
+        ? { behavior: 'allow' }
+        : { behavior: 'deny', message: 'User denied this tool use.' }
+    );
+    return true;
   }
 
   getSdkSessionId(sessionId) {
