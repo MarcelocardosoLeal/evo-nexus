@@ -5,7 +5,7 @@ import {
   Send, Square, ChevronDown, ChevronRight,
   FileCode, Terminal as TermIcon, CheckCircle2,
   Paperclip, X, File as FileIcon, ImageIcon, Upload,
-  Ticket as TicketIcon, Plus,
+  Ticket as TicketIcon, Plus, ShieldAlert, Check, Ban,
 } from 'lucide-react'
 
 interface SkillItem {
@@ -21,6 +21,15 @@ interface SlashPopup {
   items: SkillItem[]
   selectedIndex: number
   anchorStart: number
+}
+
+interface PermissionRequest {
+  requestId: string
+  toolName: string
+  input: Record<string, unknown>
+  title: string | null
+  description: string | null
+  createdAt: number
 }
 
 interface AgentChatProps {
@@ -81,6 +90,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
   const [slashPopup, setSlashPopup] = useState<SlashPopup>({
     open: false, query: '', items: [], selectedIndex: 0, anchorStart: -1,
   })
+  const [pendingApprovals, setPendingApprovals] = useState<PermissionRequest[]>([])
   const wsRef = useRef<WebSocket | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -166,9 +176,23 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
             }
             break
 
+          case 'permission_request':
+            if (msg.requestId) {
+              setPendingApprovals(prev => [...prev, {
+                requestId: msg.requestId,
+                toolName: msg.toolName,
+                input: msg.input || {},
+                title: msg.title || null,
+                description: msg.description || null,
+                createdAt: Date.now(),
+              }])
+            }
+            break
+
           case 'chat_error':
             setStatus('error')
             setIsThinking(false)
+            setPendingApprovals([])
             setErrorMsg(msg.message || 'Unknown error')
             setMessages(prev => [...prev, { role: 'system', text: `Error: ${msg.message}`, ts: Date.now() }])
             break
@@ -176,6 +200,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
           case 'chat_complete':
             setStatus('idle')
             setIsThinking(false)
+            setPendingApprovals([])
             setMessages(prev => {
               const copy = [...prev]
               for (let i = copy.length - 1; i >= 0; i--) {
@@ -289,6 +314,12 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
       alert(err?.message || 'Failed to create ticket')
     }
   }, [agent, bindTicket])
+
+  const respondToApproval = useCallback((requestId: string, approved: boolean) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return
+    wsRef.current.send(JSON.stringify({ type: 'permission_response', requestId, approved }))
+    setPendingApprovals(prev => prev.filter(r => r.requestId !== requestId))
+  }, [])
 
   const handleChatEvent = useCallback((msg: any) => {
     // Track thinking state for typing indicator
@@ -781,6 +812,22 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
         </div>
       )}
 
+      {/* Pending approval badge */}
+      {pendingApprovals.length > 0 && (
+        <div
+          className="absolute top-3 z-40 flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] animate-pulse"
+          style={{
+            right: sessionId ? '12px' : '12px',
+            background: '#F59E0B15',
+            borderColor: '#F59E0B40',
+            color: '#F59E0B',
+          }}
+        >
+          <ShieldAlert size={11} />
+          <span>{pendingApprovals.length === 1 ? 'Awaiting your approval' : `${pendingApprovals.length} awaiting approval`}</span>
+        </div>
+      )}
+
       {/* Drag-drop overlay */}
       {isDragging && (
         <div
@@ -897,6 +944,17 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
               </div>
             )}
           </div>
+        ))}
+
+        {/* Permission approval cards */}
+        {pendingApprovals.map(req => (
+          <ApprovalCard
+            key={req.requestId}
+            req={req}
+            accentColor={accentColor}
+            onAllow={() => respondToApproval(req.requestId, true)}
+            onDeny={() => respondToApproval(req.requestId, false)}
+          />
         ))}
 
         {/* Global thinking indicator when running but no assistant message yet */}
@@ -1207,6 +1265,69 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
           </pre>
         </div>
       )}
+    </div>
+  )
+}
+
+interface ApprovalCardProps {
+  req: PermissionRequest
+  accentColor: string
+  onAllow: () => void
+  onDeny: () => void
+}
+
+function ApprovalCard({ req, accentColor, onAllow, onDeny }: ApprovalCardProps) {
+  let summary = ''
+  const inp = req.input as any
+  if (req.toolName === 'Bash') {
+    summary = inp?.command ? String(inp.command).slice(0, 120) : ''
+  } else if (req.toolName === 'Write') {
+    const lines = inp?.content ? String(inp.content).split('\n').slice(0, 5).join('\n') : ''
+    summary = inp?.file_path ? `${inp.file_path}${lines ? '\n' + lines : ''}` : lines
+  } else if (req.toolName === 'Edit') {
+    summary = inp?.file_path ? String(inp.file_path) : ''
+  } else if (req.toolName === 'Agent') {
+    const agentName = inp?.subagent_type || inp?.agent || ''
+    const prompt = inp?.prompt || inp?.description || ''
+    summary = agentName ? `@${agentName}${prompt ? ' — ' + String(prompt).slice(0, 80) : ''}` : String(prompt).slice(0, 100)
+  }
+  if (!summary && req.title) summary = req.title
+
+  return (
+    <div
+      className="rounded-lg border px-3 py-2.5 flex items-start gap-3"
+      style={{ background: '#161b22', borderColor: '#F59E0B30' }}
+    >
+      <ShieldAlert size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#F59E0B' }} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-[11px] font-semibold text-[#e6edf3]">{req.toolName}</span>
+          {summary && (
+            <span className="text-[10px] text-[#8b949e] font-mono truncate max-w-[260px]">{summary}</span>
+          )}
+        </div>
+        {req.description && (
+          <p className="text-[10px] text-[#667085] truncate">{req.description}</p>
+        )}
+      </div>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <button
+          onClick={onAllow}
+          className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors"
+          style={{ background: `${accentColor}20`, color: accentColor, border: `1px solid ${accentColor}40` }}
+        >
+          <Check size={11} />
+          Allow
+        </button>
+        <button
+          onClick={onDeny}
+          className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors hover:bg-white/5"
+          style={{ background: 'transparent', color: '#8b949e', border: '1px solid #21262d' }}
+        >
+          <Ban size={11} />
+          Deny
+        </button>
+      </div>
     </div>
   )
 }
