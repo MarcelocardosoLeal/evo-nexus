@@ -126,6 +126,14 @@ class SessionStore {
             for (const session of parsed.sessions) {
                 if (!session || !session.id) continue; // Skip invalid sessions
                 
+                // Synthesize uuids for legacy chatHistory entries that lack them
+                const chatHistory = (session.chatHistory || []).map((msg, i) => {
+                    if (!msg.uuid) {
+                        return { ...msg, uuid: `legacy-${session.id}-${i}` };
+                    }
+                    return msg;
+                });
+
                 // Restore session with default values for runtime properties
                 sessions.set(session.id, {
                     ...session,
@@ -136,7 +144,7 @@ class SessionStore {
                     outputBuffer: session.outputBuffer || [],
                     maxBufferSize: 1000,
                     // Restore chat data
-                    chatHistory: session.chatHistory || [],
+                    chatHistory,
                     sdkSessionId: session.sdkSessionId || null,
                     mode: session.mode || null,
                     // Restore usage data if available

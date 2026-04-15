@@ -465,6 +465,51 @@ class TerminalServer {
             chatSession.lastActivity = new Date();
             if (!chatSession.chatHistory) chatSession.chatHistory = [];
 
+            // --- Rewind handling ---
+            if (data.rewindFromUuid) {
+              const rewindUuid = data.rewindFromUuid;
+
+              // Find uuid in in-memory cache
+              let cutIdx = chatSession.chatHistory.findIndex(m => m.uuid === rewindUuid);
+
+              // Fall back to JSONL scan if cache is cold or uuid not found
+              if (cutIdx === -1 && chatSession.agentName) {
+                const fromLog = this.chatLogger.read(chatSession.agentName, wsInfo.claudeSessionId);
+                cutIdx = fromLog.findIndex(m => m.uuid === rewindUuid);
+                if (cutIdx !== -1) {
+                  // Sync cache from JSONL
+                  chatSession.chatHistory = fromLog;
+                  cutIdx = chatSession.chatHistory.findIndex(m => m.uuid === rewindUuid);
+                }
+              }
+
+              if (cutIdx === -1) {
+                // uuid not found — error out without mutating state
+                this.sendToWebSocket(wsInfo.ws, {
+                  type: 'chat_error',
+                  message: `Rewind target not found: ${rewindUuid}`,
+                });
+                chatSession.active = false;
+                break;
+              }
+
+              // 1. If a turn is streaming, stop it first
+              if (this.chatBridge.isActive(wsInfo.claudeSessionId)) {
+                await this.chatBridge.stopSession(wsInfo.claudeSessionId);
+              }
+
+              // 2. Null out sdkSessionId so the next turn starts fresh
+              chatSession.sdkSessionId = null;
+              await this.saveSessionsToDisk();
+
+              // 3. Truncate in-memory cache to everything strictly before rewindUuid
+              chatSession.chatHistory = chatSession.chatHistory.slice(0, cutIdx);
+
+              // 4. Append rewind marker to JSONL
+              this.chatLogger.appendRewindMarker(chatSession.agentName, wsInfo.claudeSessionId, rewindUuid);
+            }
+            // --- End rewind handling ---
+
             // Store user message in history
             const userMsg = {
               role: 'user',
