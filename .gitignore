@@ -107,3 +107,4 @@ site/lib/
 # ── User-specific data ───────────
 mempalace.yaml
 entities.json
+.claude/worktrees/

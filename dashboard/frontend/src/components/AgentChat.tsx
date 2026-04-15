@@ -7,7 +7,7 @@ import {
   FileCode, Terminal as TermIcon, CheckCircle2,
   Paperclip, X, File as FileIcon, ImageIcon, Upload,
   Ticket as TicketIcon, Plus, ShieldAlert, Check, Ban,
-  Pencil, Copy,
+  Pencil, Copy, FileText, Edit2,
 } from 'lucide-react'
 
 interface SkillItem {
@@ -69,7 +69,7 @@ type ChatMessage =
 type AssistantBlock =
   | { type: 'text'; text: string }
   | { type: 'thinking'; text: string }
-  | { type: 'tool_use'; toolName: string; toolId: string; input: string; result?: string; done?: boolean; subagentType?: string; subagentStatus?: string; subagentSummary?: string }
+  | { type: 'tool_use'; toolName: string; toolId: string; input: string; result?: string; done?: boolean; subagentType?: string; subagentStatus?: string; subagentSummary?: string; subagentTools?: Array<{ toolName: string; input: string; toolUseId: string; ts: number }> }
 
 type Status = 'idle' | 'connecting' | 'running' | 'error'
 
@@ -99,6 +99,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pingRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const dragCounterRef = useRef(0)
+  const subagentToolRef = useRef<{ toolName: string; toolUseId: string; input: string; parentToolUseId: string } | null>(null)
 
   // Auto-dismiss global notifications when the user opens this session
   useEffect(() => {
@@ -416,6 +417,16 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
 
         case 'tool_use_start': {
           setIsThinking(false)
+          // Subagent tool — accumulate in ref, don't add a block
+          if (msg.parentToolUseId) {
+            subagentToolRef.current = {
+              toolName: msg.toolName,
+              toolUseId: msg.toolId,
+              input: '',
+              parentToolUseId: msg.parentToolUseId,
+            }
+            break
+          }
           const last = copy[copy.length - 1]
           if (last?.role === 'assistant') {
             const blocks = [...(last as any).blocks]
@@ -432,6 +443,13 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
         }
 
         case 'tool_input_delta': {
+          // Subagent tool input — accumulate in ref
+          if (msg.parentToolUseId) {
+            if (subagentToolRef.current && subagentToolRef.current.parentToolUseId === msg.parentToolUseId) {
+              subagentToolRef.current = { ...subagentToolRef.current, input: subagentToolRef.current.input + (msg.json || '') }
+            }
+            break
+          }
           const last = copy[copy.length - 1]
           if (last?.role === 'assistant') {
             const blocks = [...(last as any).blocks]
@@ -445,6 +463,35 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
         }
 
         case 'block_stop': {
+          // Subagent block finished — flush to parent Agent block's subagentTools
+          if (msg.parentToolUseId && subagentToolRef.current) {
+            const entry = {
+              toolName: subagentToolRef.current.toolName,
+              input: subagentToolRef.current.input,
+              toolUseId: subagentToolRef.current.toolUseId,
+              ts: Date.now(),
+            }
+            const parentId = msg.parentToolUseId
+            subagentToolRef.current = null
+            // Find parent Agent block across all messages
+            for (let mi = copy.length - 1; mi >= 0; mi--) {
+              const m = copy[mi]
+              if (m.role !== 'assistant') continue
+              const blocks = [...(m as any).blocks]
+              let found = false
+              for (let bi = blocks.length - 1; bi >= 0; bi--) {
+                if (blocks[bi].type === 'tool_use' && blocks[bi].toolId === parentId) {
+                  const existing: typeof entry[] = blocks[bi].subagentTools || []
+                  blocks[bi] = { ...blocks[bi], subagentTools: [...existing, entry] }
+                  copy[mi] = { ...m, blocks } as any
+                  found = true
+                  break
+                }
+              }
+              if (found) break
+            }
+            break
+          }
           const last = copy[copy.length - 1]
           if (last?.role === 'assistant') {
             const blocks = [...(last as any).blocks]
@@ -666,6 +713,28 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
 
     scrollToBottom()
   }, [editingText, editingUuid, scrollToBottom])
+
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    const imageFiles: File[] = []
+    for (const item of items) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const file = item.getAsFile()
+        if (file) {
+          const ext = file.type.split('/')[1] || 'png'
+          const named = file.name && file.name !== 'image.png'
+            ? file
+            : new File([file], `pasted-${Date.now()}.${ext}`, { type: file.type })
+          imageFiles.push(named)
+        }
+      }
+    }
+    if (imageFiles.length > 0) {
+      e.preventDefault()
+      processFiles(imageFiles)
+    }
+  }, [processFiles])
 
   // Send message
   const sendMessage = useCallback(async () => {
@@ -1261,6 +1330,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
               placeholder={`Message @${agent}...`}
               rows={1}
               className="flex-1 resize-none bg-transparent text-sm text-[#e6edf3] placeholder:text-[#667085] focus:outline-none max-h-32 disabled:cursor-not-allowed disabled:opacity-60"
@@ -1344,6 +1414,26 @@ function TypingIndicator({ accentColor, isThinking }: { accentColor: string; isT
   )
 }
 
+function AgentInputToggle({ parsedInput, rawInput }: { parsedInput: any; rawInput: string }) {
+  const [showInput, setShowInput] = useState(false)
+  return (
+    <div className="border-t border-[#21262d]/50">
+      <button
+        onClick={() => setShowInput(v => !v)}
+        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] text-[#667085] hover:text-[#8b949e] transition-colors w-full"
+      >
+        {showInput ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+        View input
+      </button>
+      {showInput && (
+        <pre className="px-3 pb-2 text-[11px] text-[#8b949e] font-mono whitespace-pre-wrap break-all max-h-48 overflow-y-auto">
+          {parsedInput ? JSON.stringify(parsedInput, null, 2) : rawInput}
+        </pre>
+      )}
+    </div>
+  )
+}
+
 function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { type: 'tool_use' }>; accentColor: string }) {
   const [open, setOpen] = useState(false)
 
@@ -1358,6 +1448,15 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
   if (isAgentTool) {
     const isRunning = block.subagentStatus === 'running'
     const isDone = block.done || block.subagentStatus === 'completed' || block.subagentStatus === 'failed'
+    const subagentTools = block.subagentTools || []
+    const toolCount = subagentTools.length
+
+    const getToolIcon = (toolName: string) => {
+      if (toolName === 'Bash') return <TermIcon size={11} className="text-[#667085] flex-shrink-0" />
+      if (toolName === 'Read') return <FileText size={11} className="text-[#667085] flex-shrink-0" />
+      if (toolName === 'Edit' || toolName === 'Write') return <Edit2 size={11} className="text-[#667085] flex-shrink-0" />
+      return <FileCode size={11} className="text-[#667085] flex-shrink-0" />
+    }
 
     return (
       <div className="border border-[#21262d] rounded-lg overflow-hidden">
@@ -1389,6 +1488,12 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
           )}
 
           <span className="ml-auto flex-shrink-0 flex items-center gap-2">
+            {/* Tool count badge */}
+            {toolCount > 0 && (
+              <span className="text-[10px] text-[#667085] tabular-nums">
+                {toolCount} {toolCount === 1 ? 'tool' : 'tools'}
+              </span>
+            )}
             {/* Progress summary */}
             {isRunning && block.subagentSummary && (
               <span className="text-[10px] text-[#667085] truncate max-w-[200px]" style={{ animation: 'chat-pulse 2s ease-in-out infinite' }}>
@@ -1402,11 +1507,35 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
             )}
           </span>
         </button>
-        {open && block.input && (
-          <div className="px-3 py-2 border-t border-[#21262d] bg-[#0d1117]">
-            <pre className="text-[11px] text-[#8b949e] font-mono whitespace-pre-wrap break-all max-h-48 overflow-y-auto">
-              {parsedInput ? JSON.stringify(parsedInput, null, 2) : block.input}
-            </pre>
+        {open && (
+          <div className="border-t border-[#21262d] bg-[#0d1117]">
+            {/* Tool list */}
+            <div className="max-h-80 overflow-y-auto">
+              {subagentTools.length === 0 ? (
+                <div className="px-3 py-2 text-[11px] text-[#667085]">No tools yet</div>
+              ) : (
+                subagentTools.map((t, i) => {
+                  let inputPreview = ''
+                  try {
+                    const parsed = JSON.parse(t.input)
+                    inputPreview = (parsed.command || parsed.file_path || parsed.path || parsed.pattern || parsed.description || t.input).slice(0, 60)
+                  } catch {
+                    inputPreview = t.input.slice(0, 60)
+                  }
+                  return (
+                    <div key={t.toolUseId || i} className="flex items-center gap-2 px-3 py-1.5 text-[11px] border-t border-[#21262d]/50 first:border-t-0">
+                      {getToolIcon(t.toolName)}
+                      <span className="text-[#8b949e] font-medium flex-shrink-0">{t.toolName}</span>
+                      {inputPreview && (
+                        <span className="text-[#667085] truncate">{inputPreview}</span>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+            {/* Collapsible raw input */}
+            {block.input && <AgentInputToggle parsedInput={parsedInput} rawInput={block.input} />}
           </div>
         )}
       </div>

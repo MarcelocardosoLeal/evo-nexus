@@ -494,6 +494,7 @@ class ChatBridge {
                 toolName: cb.name,
                 toolId: cb.id,
                 input: {},
+                parentToolUseId: msg.parent_tool_use_id || undefined,
               };
             }
             if (cb?.type === 'text') {
@@ -511,7 +512,7 @@ class ChatBridge {
               return { type: 'text_delta', text: delta.text };
             }
             if (delta?.type === 'input_json_delta') {
-              return { type: 'tool_input_delta', json: delta.partial_json };
+              return { type: 'tool_input_delta', json: delta.partial_json, parentToolUseId: msg.parent_tool_use_id || undefined };
             }
             if (delta?.type === 'thinking_delta') {
               return { type: 'thinking_delta', text: delta.thinking };
@@ -520,7 +521,7 @@ class ChatBridge {
           }
 
           case 'content_block_stop': {
-            return { type: 'block_stop', index: event.index };
+            return { type: 'block_stop', index: event.index, parentToolUseId: msg.parent_tool_use_id || undefined };
           }
 
           case 'message_start':
