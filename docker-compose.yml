@@ -32,32 +32,32 @@ services:
       retries: 3
       start_period: 15s
 
-  # Telegram — bot that listens for messages
-  telegram:
-    build: .
-    container_name: evonexus-telegram-local
-    labels:
-      - "com.evonexus.environment=local"
-    entrypoint: ["claude"]
-    command: ["--channels", "plugin:telegram@claude-plugins-official", "--dangerously-skip-permissions"]
-    env_file: .env
-    environment:
-      - TZ=America/Sao_Paulo
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-    volumes:
-      - daily-logs-local:/workspace/workspace/daily-logs
-      - projects-local:/workspace/workspace/projects
-      - community-local:/workspace/workspace/community
-      - financial-local:/workspace/workspace/finance
-      - personal-local:/workspace/workspace/personal
-      - meetings-local:/workspace/workspace/meetings
-      - strategy-local:/workspace/workspace/strategy
-      - memory-local:/workspace/memory
-      - adw-logs-local:/workspace/ADWs/logs
-      - agent-memory-local:/workspace/.claude/agent-memory
-    restart: unless-stopped
-    stdin_open: true
-    tty: true
+#  # Telegram — bot that listens for messages
+#  telegram:
+#    build: .
+#    container_name: evonexus-telegram-local
+#    labels:
+#      - "com.evonexus.environment=local"
+#    entrypoint: ["claude"]
+#    command: ["--channels", "plugin:telegram@claude-plugins-official", "--dangerously-skip-permissions"]
+#    env_file: .env
+#    environment:
+#      - TZ=America/Sao_Paulo
+#      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+#    volumes:
+#      - daily-logs-local:/workspace/workspace/daily-logs
+#      - projects-local:/workspace/workspace/projects
+#      - community-local:/workspace/workspace/community
+#      - financial-local:/workspace/workspace/finance
+#      - personal-local:/workspace/workspace/personal
+#      - meetings-local:/workspace/workspace/meetings
+#      - strategy-local:/workspace/workspace/strategy
+#      - memory-local:/workspace/memory
+#      - adw-logs-local:/workspace/ADWs/logs
+#      - agent-memory-local:/workspace/.claude/agent-memory
+#    restart: unless-stopped
+#    stdin_open: true
+#    tty: true
 
   # Runner on-demand — to execute routines manually
   # Usage: docker compose run --rm runner ADWs/routines/good_morning.py
