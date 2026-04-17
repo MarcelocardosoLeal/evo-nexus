@@ -1,4 +1,6 @@
 FROM node:22-slim AS base
+LABEL environment="local"
+LABEL version="development-local"
 
 # System deps
 RUN apt-get update && apt-get install -y \
@@ -12,6 +14,10 @@ ENV PATH="/root/.local/bin:$PATH"
 
 # Install Claude Code CLI
 RUN npm install -g @anthropic-ai/claude-code
+
+# Install Bun (needed for chat channels)
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$PATH"
 
 # Install GitHub CLI
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \

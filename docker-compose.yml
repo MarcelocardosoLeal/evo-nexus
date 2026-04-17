@@ -4,7 +4,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dashboard
-    container_name: evonexus-dashboard
+    container_name: evonexus-dashboard-local
+    labels:
+      - "com.evonexus.environment=local"
     ports:
       - "${EVONEXUS_PORT:-8080}:8080"
     env_file: .env
@@ -12,16 +14,16 @@ services:
       - TZ=America/Sao_Paulo
       - EVONEXUS_PORT=8080
     volumes:
-      - ./.env:/workspace/.env:ro
-      - ./config:/workspace/config:ro
+      - ./.env:/workspace/.env
+      - ./config:/workspace/config
       - ./workspace:/workspace/workspace
-      - ./dashboard/data:/workspace/dashboard/data
+      - evonexus-db-local:/workspace/dashboard/data
       - ./.claude/agents:/workspace/.claude/agents:ro
       - ./.claude/skills:/workspace/.claude/skills:ro
       - ./.claude/commands:/workspace/.claude/commands:ro
       - ./.claude/templates:/workspace/.claude/templates:ro
-      - ./memory:/workspace/memory:ro
-      - ./ADWs/logs:/workspace/ADWs/logs:ro
+      - ./memory:/workspace/memory
+      - ./ADWs/logs:/workspace/ADWs/logs
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/version"]
@@ -33,7 +35,9 @@ services:
   # Telegram — bot that listens for messages
   telegram:
     build: .
-    container_name: evonexus-telegram
+    container_name: evonexus-telegram-local
+    labels:
+      - "com.evonexus.environment=local"
     entrypoint: ["claude"]
     command: ["--channels", "plugin:telegram@claude-plugins-official", "--dangerously-skip-permissions"]
     env_file: .env
@@ -41,16 +45,16 @@ services:
       - TZ=America/Sao_Paulo
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
     volumes:
-      - daily-logs:/workspace/workspace/daily-logs
-      - projects:/workspace/workspace/projects
-      - community:/workspace/workspace/community
-      - financial:/workspace/workspace/finance
-      - personal:/workspace/workspace/personal
-      - meetings:/workspace/workspace/meetings
-      - strategy:/workspace/workspace/strategy
-      - memory:/workspace/memory
-      - adw-logs:/workspace/ADWs/logs
-      - agent-memory:/workspace/.claude/agent-memory
+      - daily-logs-local:/workspace/workspace/daily-logs
+      - projects-local:/workspace/workspace/projects
+      - community-local:/workspace/workspace/community
+      - financial-local:/workspace/workspace/finance
+      - personal-local:/workspace/workspace/personal
+      - meetings-local:/workspace/workspace/meetings
+      - strategy-local:/workspace/workspace/strategy
+      - memory-local:/workspace/memory
+      - adw-logs-local:/workspace/ADWs/logs
+      - agent-memory-local:/workspace/.claude/agent-memory
     restart: unless-stopped
     stdin_open: true
     tty: true
@@ -59,19 +63,21 @@ services:
   # Usage: docker compose run --rm runner ADWs/routines/good_morning.py
   runner:
     build: .
-    container_name: evonexus-runner
+    container_name: evonexus-runner-local
+    labels:
+      - "com.evonexus.environment=local"
     env_file: .env
     environment:
       - TZ=America/Sao_Paulo
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
     volumes:
-      - daily-logs:/workspace/workspace/daily-logs
-      - projects:/workspace/workspace/projects
-      - community:/workspace/workspace/community
-      - financial:/workspace/workspace/finance
-      - personal:/workspace/workspace/personal
-      - meetings:/workspace/workspace/meetings
-      - strategy:/workspace/workspace/strategy
+      - daily-logs-local:/workspace/workspace/daily-logs
+      - projects-local:/workspace/workspace/projects
+      - community-local:/workspace/workspace/community
+      - financial-local:/workspace/workspace/finance
+      - personal-local:/workspace/workspace/personal
+      - meetings-local:/workspace/workspace/meetings
+      - strategy-local:/workspace/workspace/strategy
       - memory:/workspace/memory
       - adw-logs:/workspace/ADWs/logs
       - agent-memory:/workspace/.claude/agent-memory
@@ -79,13 +85,14 @@ services:
       - manual
 
 volumes:
-  daily-logs:
-  projects:
-  community:
-  financial:
-  personal:
-  meetings:
-  strategy:
-  memory:
-  adw-logs:
-  agent-memory:
+  evonexus-db-local:
+  daily-logs-local:
+  projects-local:
+  community-local:
+  financial-local:
+  personal-local:
+  meetings-local:
+  strategy-local:
+  memory-local:
+  adw-logs-local:
+  agent-memory-local:

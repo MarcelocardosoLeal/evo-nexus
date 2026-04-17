@@ -15,6 +15,8 @@ RUN npm run build
 
 # --- Stage 2: Python backend ---
 FROM python:3.12-slim AS runtime
+LABEL environment="local"
+LABEL version="development-local"
 
 # System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -42,9 +44,6 @@ COPY scheduler.py ./
 
 # Copy built frontend from stage 1
 COPY --from=frontend-build /frontend/dist dashboard/frontend/dist
-
-# Copy pyproject.toml again (needed by app.py for version reading)
-# Already copied above, but ensure it's at workspace root
 
 # Create data directory for SQLite
 RUN mkdir -p dashboard/data
