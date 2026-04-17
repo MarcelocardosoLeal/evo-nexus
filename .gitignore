@@ -1,0 +1,111 @@
+# ══════════════════════════════════════════
+# EvoNexus — .gitignore
+# Framework files are tracked.
+# Personal data, secrets, and runtime output are NOT.
+# ══════════════════════════════════════════
+
+# ── Secrets & credentials ─────────────────
+.env
+
+# EN folder names (new standard)
+workspace/daily-logs/*
+!workspace/daily-logs/.gitkeep
+workspace/projects/*
+!workspace/projects/.gitkeep
+workspace/community/*
+!workspace/community/.gitkeep
+workspace/social/*
+!workspace/social/.gitkeep
+workspace/finance/*
+!workspace/finance/.gitkeep
+workspace/personal/*
+!workspace/personal/.gitkeep
+workspace/meetings/*
+!workspace/meetings/.gitkeep
+workspace/courses/*
+!workspace/courses/.gitkeep
+workspace/strategy/*
+!workspace/strategy/.gitkeep
+
+# ── Agent memory (runtime, personal) ──────
+.claude/agent-memory/
+memory/
+
+# ── Product-specific skills (not generic) ─
+.claude/skills/int-licensing/
+.claude/skills/int-whatsapp/
+.claude/skills/prod-licensing-daily/
+.claude/skills/prod-licensing-weekly/
+.claude/skills/prod-licensing-monthly/
+
+# ── Custom agents (user-specific) ────────
+.claude/agents/custom-*
+.claude/commands/custom-*
+
+# ── Custom templates (user-specific) ─────
+.claude/templates/html/custom/
+.claude/templates/custom/
+
+# ── Custom routines (user-specific, all in one place) ─
+ADWs/routines/custom/
+
+# ── Runtime data & logs ───────────────────
+backups/
+ADWs/logs/
+dashboard/data/*.db
+dashboard/data/*.db-shm
+dashboard/data/*.db-wal
+dashboard/data/.secret_key
+dashboard/data/mempalace/
+dashboard/frontend/node_modules/
+dashboard/frontend/dist/
+
+# ── Evo Method (separate project) ────────
+_evo/
+_evo-output/
+.claude/skills/evo-*/
+.claude/skills/release/
+
+# ── Python ────────────────────────────────
+.venv/
+__pycache__/
+*.pyc
+
+# ── OS ────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Generated configs (user-specific) ────
+CLAUDE.md
+config/workspace.yaml
+config/routines.yaml
+
+# ── Claude Code session data ─────────────
+.claude/projects/
+.claude/image-cache/
+.claude/todos/
+.claude/TASKS.md
+
+# ── Site (landing page) ──────────
+site/node_modules/
+site/dist/
+site/package-lock.json
+site/.cache/
+# Replit artifacts (not needed in standalone build)
+site/.git/
+site/artifacts/
+site/attached_assets/
+site/.agents/
+site/.canvas/
+site/.local/
+site/.replit
+site/.replitignore
+site/.npmrc
+site/pnpm-lock.yaml
+site/pnpm-workspace.yaml
+site/replit.md
+site/lib/
+
+# ── User-specific data ───────────
+mempalace.yaml
+entities.json
