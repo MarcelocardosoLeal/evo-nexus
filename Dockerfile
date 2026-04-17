@@ -27,6 +27,12 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 # Install todoist CLI
 RUN npm install -g todoist-ts-cli
 
+# Create a non-root user
+RUN useradd -m -s /bin/bash evouser && \
+    chown -R evouser:evouser /workspace
+USER evouser
+
+# Set workdir
 WORKDIR /workspace
 
 # Copy project files
