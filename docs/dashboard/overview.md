@@ -131,7 +131,16 @@ Status board for all 18 integrations. Shows which are connected (green), which n
 
 ### Providers
 
-Pick and configure which LLM backend powers EvoNexus — Anthropic (default), or any of 6 alternates via [OpenClaude](https://www.npmjs.com/package/@gitlawb/openclaude): OpenRouter, OpenAI, Gemini, Codex Auth, AWS Bedrock, Vertex AI. Each provider card shows install status (claude vs openclaude), configured/unconfigured flags, and a Test button that runs `<binary> --version` with the merged env. Switching provider takes effect immediately — both the terminal-server and the ADW runner re-read `config/providers.json` on every session spawn, no restart needed. Secrets are masked in the UI and in every API response. See [providers.md](providers.md) for the full reference.
+Pick and configure which LLM backend powers EvoNexus — Anthropic (default), or any of 6 alternates via [OpenClaude](https://www.npmjs.com/package/@gitlawb/openclaude): OpenRouter, OpenAI, Gemini, Codex Auth, AWS Bedrock, Vertex AI. Each provider card shows install status (claude vs openclaude), configured/unconfigured flags, and a Test button that runs `<binary> --version` with the merged env. Switching provider takes effect immediately — both the terminal-server and the ADW runner re-read `config/providers.json` on every session spawn, no restart needed. Secrets are masked in the UI and in every API response.
+
+The page also includes **Provider Routing**, where admins can:
+
+- define the provider priority order;
+- enable automatic fallback;
+- reset temporarily blocked providers;
+- keep sessions and routines alive when the current backend hits credit exhaustion, usage-window limits, auth failures, rate limits, or transient outages.
+
+See [providers.md](providers.md) for the full reference.
 
 ### Chat
 

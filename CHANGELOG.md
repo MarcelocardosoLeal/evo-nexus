@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Provider Routing + Automatic Fallback** — the Providers page now includes an admin-facing routing layer on top of the existing multi-provider support. Workspaces can define a provider priority chain (`provider_order`), enable/disable automatic fallback, and keep sessions/jobs running when the active backend fails because of credit exhaustion, usage-window exhaustion, auth rejection, rate limiting, or transient provider/network outages. Runtime state is persisted in `config/providers.json` under `provider_runtime`, including `status`, `reason`, `cooldown_until`, and `last_failure_at`. The same routing logic is enforced by both the dashboard terminal bridge (`dashboard/terminal-server/src/claude-bridge.js`) and the ADW runner (`ADWs/runner.py`), so interactive sessions and routines behave consistently.
+- **Anthropic provider key storage in Providers UI** — in this fork, the Anthropic card can optionally persist `ANTHROPIC_API_KEY` directly in `config/providers.json`, allowing an admin to hand over the workspace credential to a client/investor without depending exclusively on the persisted native Claude CLI login state inside the container volume.
+
+### Changed
+
+- **Providers UI** — each provider card now surfaces runtime health (`healthy` vs temporarily blocked), manual runtime reset, and participation in the routing chain. The page gained a dedicated **Provider Routing** panel for ordering providers and toggling fallback behavior.
+- **Provider docs coverage** — expanded `README.md`, `docs/dashboard/providers.md`, `docs/dashboard/overview.md`, `docs/getting-started.md`, and `docs/reference/env-variables.md` to document the new routing metadata, Anthropic key option, and operational fallback behavior.
+
 ## [0.29.0] - 2026-04-23
 
 ### Added

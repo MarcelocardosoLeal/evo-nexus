@@ -54,6 +54,14 @@ npm install -g @gitlawb/openclaude
 
 Then select the provider in the wizard (or later from the **Providers** page in the dashboard) and fill in the keys. The active provider is stored in `config/providers.json` and both the terminal-server and the ADW runner re-read it on every session spawn — no restart required when switching.
 
+In this fork, the Providers page also includes **Provider Routing**:
+
+- define the provider priority order;
+- enable or disable automatic fallback;
+- keep the workspace running when the current provider fails because of credit exhaustion, usage-window exhaustion, auth errors, rate limits, or transient outages.
+
+This is especially useful for client-facing or investor demos where the workspace must continue operating even if the primary Anthropic account becomes temporarily unavailable.
+
 See [docs/dashboard/providers.md](dashboard/providers.md) for the full provider reference and [docs/reference/env-variables.md](reference/env-variables.md#ai-provider-configuration) for all provider-related env vars.
 
 ### 3. Configure API Keys

@@ -10,6 +10,7 @@ The env vars below are the ones EvoNexus injects into the spawned CLI process ba
 
 | Variable | Used by | Description |
 |----------|---------|-------------|
+| `ANTHROPIC_API_KEY` | Anthropic (optional in this fork) | Anthropic API key used when the admin chooses to store the workspace credential directly in `providers.json` instead of relying only on the persisted native Claude CLI login |
 | `CLAUDE_CODE_USE_OPENAI` | OpenRouter, OpenAI, Codex Auth | Flag telling OpenClaude to dispatch to the OpenAI-compatible protocol |
 | `CLAUDE_CODE_USE_GEMINI` | Gemini | Flag telling OpenClaude to dispatch to Gemini |
 | `CLAUDE_CODE_USE_BEDROCK` | AWS Bedrock | Flag telling OpenClaude to dispatch to Bedrock |
@@ -26,7 +27,20 @@ The env vars below are the ones EvoNexus injects into the spawned CLI process ba
 
 **How to configure**: use the **Providers** page in the dashboard — it reads/writes `config/providers.json` for you, masks secrets in API responses, and has a "Test connection" button that runs `<provider-cli> --version` with the merged env. Alternatively, edit `config/providers.json` directly (it starts as a copy of `config/providers.example.json` on first run).
 
-**Anthropic is the default** — when the active provider is `anthropic`, no env vars are injected and the spawned CLI is the native `claude` binary with its own auth. You don't need any of the variables above for the default path.
+**Anthropic is the default** — when the active provider is `anthropic`, the spawned CLI is the native `claude` binary. In upstream EvoNexus that usually means native Claude CLI auth only. In this fork, admins may optionally also store `ANTHROPIC_API_KEY` in the Anthropic provider card to make credential handoff easier for hosted/client workspaces.
+
+## Provider Routing Metadata
+
+Besides `active_provider`, `config/providers.json` can also store routing metadata for automatic failover:
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `provider_order` | array | Ordered provider chain used after the active provider |
+| `fallback_enabled` | boolean | Enables automatic failover to the next provider in the chain |
+| `auto_return_to_primary` | boolean | Workspace preference indicating that EvoNexus should return to the primary provider once it becomes healthy again |
+| `provider_runtime` | object | Runtime health state for each provider (`healthy`, `blocked`, cooldown timestamp, failure reason) |
+
+`provider_runtime` is maintained by the application itself — admins don't edit it manually unless they are debugging a broken state.
 
 See [docs/dashboard/providers.md](../dashboard/providers.md) for the full provider setup flow.
 
