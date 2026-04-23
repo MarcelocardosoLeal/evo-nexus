@@ -133,6 +133,46 @@ def test_build_provider_candidates_returns_empty_when_all_providers_blocked(temp
     assert runner._build_provider_candidates() == []
 
 
+def test_build_provider_candidates_skips_coming_soon_providers(temp_provider_config):
+    import ADWs.runner as runner
+
+    _write_provider_config(temp_provider_config, {
+        "active_provider": "anthropic",
+        "provider_order": ["anthropic", "gemini", "openai"],
+        "fallback_enabled": True,
+        "provider_runtime": {
+            "anthropic": {
+                "status": "blocked",
+                "reason": "credit_exhausted",
+                "cooldown_until": 4102444800,
+                "last_failure_at": 1700000000,
+            }
+        },
+        "providers": {
+            "anthropic": {"cli_command": "claude", "env_vars": {}},
+            "gemini": {
+                "cli_command": "openclaude",
+                "coming_soon": True,
+                "env_vars": {
+                    "CLAUDE_CODE_USE_GEMINI": "1",
+                    "GEMINI_API_KEY": "future-key",
+                },
+            },
+            "openai": {
+                "cli_command": "openclaude",
+                "env_vars": {
+                    "CLAUDE_CODE_USE_OPENAI": "1",
+                    "OPENAI_API_KEY": "sk-openai",
+                },
+            },
+        },
+    })
+
+    candidates = runner._build_provider_candidates()
+
+    assert [provider_id for provider_id, _, _ in candidates] == ["openai"]
+
+
 def test_run_claude_raises_clear_error_when_no_provider_is_healthy(monkeypatch):
     import ADWs.runner as runner
 

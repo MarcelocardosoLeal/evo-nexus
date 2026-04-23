@@ -11,6 +11,7 @@ interface Provider {
   has_config: boolean; env_vars: ProviderEnvVars; requires_logout: boolean
   setup_hint: string | null; default_model: string | null
   default_base_url: string | null; default_region: string | null
+  coming_soon: boolean
   priority_index: number | null
   runtime_status: string
   runtime_reason: string | null
@@ -39,8 +40,31 @@ const PROVIDER_COLORS: Record<string, string> = {
   gemini: '#4285F4', codex_auth: '#10A37F', bedrock: '#FF9900', vertex: '#4285F4',
 }
 
+const RUNTIME_REASON_LABELS: Record<string, string> = {
+  credit_exhausted: 'Credits exhausted',
+  usage_window_exhausted: 'Usage window exhausted',
+  rate_limited: 'Rate limited',
+  auth_invalid: 'Authentication required',
+  provider_unreachable: 'Provider unavailable',
+  manual_block: 'Blocked manually',
+  unknown: 'Temporarily blocked',
+}
+
 function isFlag(key: string) { return key.startsWith('CLAUDE_CODE_USE_') }
 function isSecret(key: string) { return key.includes('KEY') || key.includes('SECRET') || key.includes('TOKEN') }
+function formatRuntimeReason(reason: string | null, status: string) {
+  if (!reason) return status === 'healthy' ? 'Healthy' : 'Temporarily blocked'
+  return RUNTIME_REASON_LABELS[reason] || reason.replace(/_/g, ' ')
+}
+function formatCooldown(cooldownUntil: number | null) {
+  if (!cooldownUntil) return null
+  const delta = cooldownUntil - Math.floor(Date.now() / 1000)
+  if (delta <= 0) return 'Cooldown expired'
+  const hours = Math.floor(delta / 3600)
+  const minutes = Math.ceil((delta % 3600) / 60)
+  if (hours > 0) return `${hours}h ${minutes}m remaining`
+  return `${minutes}m remaining`
+}
 
 /* ── Toggle switch ── */
 function Toggle({ on, onChange, disabled }: { on: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
@@ -408,6 +432,20 @@ export default function Providers() {
     ...providerOrder.filter(id => providersById[id]).map(id => providersById[id]),
     ...providers.filter(p => !providerOrder.includes(p.id)),
   ]
+  const routableProviders = orderedProviders.filter(p => !p.coming_soon)
+  const upcomingProviders = orderedProviders.filter(p => p.coming_soon)
+  const primaryRoutingProvider = routableProviders[0] || null
+  const providerReadiness = (prov: Provider) => {
+    if (prov.coming_soon) return { label: 'Coming soon', tone: 'muted' as const }
+    if (!prov.installed) return { label: 'CLI missing', tone: 'danger' as const }
+    if (prov.id === 'codex_auth' && !codexAuth?.authenticated) return { label: 'OAuth required', tone: 'warning' as const }
+    if (!prov.has_config) return { label: 'Needs setup', tone: 'warning' as const }
+    return { label: 'Ready', tone: 'success' as const }
+  }
+  const readyFallback = fallbackEnabled
+    ? routableProviders.slice(1).find((prov) => prov.runtime_status === 'healthy' && providerReadiness(prov).label === 'Ready')
+    : null
+  const primaryRoutingBlocked = !!primaryRoutingProvider && primaryRoutingProvider.runtime_status !== 'healthy'
 
   const inp = "w-full px-4 py-3 rounded-lg bg-[#0f1520] border border-[#1e2a3a] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[#00FFA7]/60 focus:ring-1 focus:ring-[#00FFA7]/20 font-mono"
   const lbl = "block text-[11px] font-semibold text-[#5a6b7f] mb-1.5 tracking-[0.08em] uppercase"
@@ -434,7 +472,8 @@ export default function Providers() {
             </span>
           </div>
           <div className="ml-auto flex items-center gap-4 text-[11px] tracking-wide uppercase text-[#5a6b7f]">
-            <span>{providers.length} available</span>
+            <span>{routableProviders.length} routable</span>
+            <span>{upcomingProviders.length} upcoming</span>
             <span>{configuredCount} configured</span>
             <span className={hasActive ? 'text-[#00FFA7]' : 'text-[#ef4444]'}>
               {hasActive ? '1 active' : 'none active'}
@@ -448,7 +487,7 @@ export default function Providers() {
           <div className="flex items-center justify-between gap-4 mb-4">
             <div>
               <h2 className="text-sm font-semibold text-white">Provider Routing</h2>
-              <p className="text-[11px] text-[#5a6b7f] mt-1">Define a ordem de uso e o fallback automatico quando um provider ficar sem credito, limite ou disponibilidade.</p>
+              <p className="text-[11px] text-[#5a6b7f] mt-1">Choose the primary provider and the live fallback order used when a provider runs out of credits, enters cooldown, or becomes unavailable.</p>
             </div>
             <button
               onClick={handleSaveRouting}
@@ -465,30 +504,81 @@ export default function Providers() {
               <span>Automatic fallback</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-[#c7d2e0]">
-              <Toggle on={autoReturnToPrimary} onChange={setAutoReturnToPrimary} />
+              <Toggle on={autoReturnToPrimary} onChange={setAutoReturnToPrimary} disabled={!fallbackEnabled} />
               <span>Auto-return when primary recovers</span>
             </div>
           </div>
 
+          {primaryRoutingProvider && (
+            <div className={`mb-4 rounded-lg border px-3 py-2.5 text-xs ${
+              primaryRoutingBlocked
+                ? 'border-[#4a2b00] bg-[#1a1500] text-[#FBBF24]'
+                : 'border-[#123227] bg-[#071b15] text-[#7fffd4]'
+            }`}>
+              {primaryRoutingBlocked ? (
+                <>
+                  <strong>{primaryRoutingProvider.name}</strong> is currently blocked: {formatRuntimeReason(primaryRoutingProvider.runtime_reason, primaryRoutingProvider.runtime_status)}.
+                  {primaryRoutingProvider.cooldown_until && <> {formatCooldown(primaryRoutingProvider.cooldown_until)}.</>}
+                  {' '}
+                  {readyFallback
+                    ? <>New sessions will fall through to <strong>{readyFallback.name}</strong> while the primary is unavailable.</>
+                    : <>No ready fallback is currently available. Configure and enable another provider before relying on automatic failover.</>}
+                </>
+              ) : (
+                <>
+                  <strong>{primaryRoutingProvider.name}</strong> is the current primary provider.
+                  {' '}
+                  {fallbackEnabled
+                    ? readyFallback
+                      ? <>If it fails, EvoNexus will try <strong>{readyFallback.name}</strong> next.</>
+                      : <>Automatic fallback is enabled, but there is no ready secondary provider yet.</>
+                    : <>Automatic fallback is disabled for this workspace.</>}
+                </>
+              )}
+            </div>
+          )}
+
           <div className="space-y-2">
-            {providerOrder.map((providerId, index) => {
-              const prov = providersById[providerId]
-              if (!prov) return null
+            {routableProviders.map((prov, index) => {
+              const providerId = prov.id
+              const readiness = providerReadiness(prov)
+              const runtimeLabel = prov.runtime_status === 'healthy'
+                ? 'Healthy'
+                : formatRuntimeReason(prov.runtime_reason, prov.runtime_status)
               return (
                 <div key={providerId} className="flex items-center gap-3 rounded-lg border border-[#152030] bg-[#0f1520] px-3 py-2">
                   <div className="w-7 text-center text-[11px] font-semibold text-[#5a6b7f]">{index + 1}</div>
                   <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PROVIDER_COLORS[prov.id] || '#5a6b7f' }} />
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-white">{prov.name}</div>
-                    <div className="text-[11px] text-[#5a6b7f]">
-                      {index === 0 ? 'Primary candidate' : `Fallback #${index}`}
+                    <div className="text-[11px] text-[#5a6b7f] flex flex-wrap items-center gap-2 mt-0.5">
+                      <span>{index === 0 ? 'Primary provider' : `Fallback #${index}`}</span>
+                      <span className={`px-1.5 py-0.5 rounded border ${
+                        prov.runtime_status === 'healthy'
+                          ? 'border-[#123227] bg-[#071b15] text-[#7fffd4]'
+                          : 'border-[#4a2b00] bg-[#1a1500] text-[#FBBF24]'
+                      }`}>
+                        {runtimeLabel}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded border ${
+                        readiness.tone === 'success'
+                          ? 'border-[#123227] bg-[#071b15] text-[#7fffd4]'
+                          : readiness.tone === 'danger'
+                            ? 'border-[#3a1515] bg-[#1a0a0a] text-[#f87171]'
+                            : 'border-[#2e3a4a] bg-[#101926] text-[#9fb3c8]'
+                      }`}>
+                        {readiness.label}
+                      </span>
+                      {prov.cooldown_until && prov.runtime_status !== 'healthy' && (
+                        <span>{formatCooldown(prov.cooldown_until)}</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
                     <button onClick={() => moveProvider(providerId, -1)} disabled={index === 0} className="p-1.5 rounded border border-[#1e2a3a] text-[#5a6b7f] hover:text-white disabled:opacity-30">
                       <ArrowUp size={12} />
                     </button>
-                    <button onClick={() => moveProvider(providerId, 1)} disabled={index === providerOrder.length - 1} className="p-1.5 rounded border border-[#1e2a3a] text-[#5a6b7f] hover:text-white disabled:opacity-30">
+                    <button onClick={() => moveProvider(providerId, 1)} disabled={index === routableProviders.length - 1} className="p-1.5 rounded border border-[#1e2a3a] text-[#5a6b7f] hover:text-white disabled:opacity-30">
                       <ArrowDown size={12} />
                     </button>
                   </div>
@@ -496,6 +586,13 @@ export default function Providers() {
               )
             })}
           </div>
+
+          {upcomingProviders.length > 0 && (
+            <div className="mt-4 rounded-lg border border-[#152030] bg-[#0f1520] px-3 py-2.5 text-[11px] text-[#5a6b7f]">
+              <span className="text-white font-medium">Upcoming providers are excluded from live routing:</span>{' '}
+              {upcomingProviders.map((prov) => prov.name).join(', ')}.
+            </div>
+          )}
         </div>
       )}
 
@@ -510,6 +607,9 @@ export default function Providers() {
             const color = PROVIDER_COLORS[prov.id] || '#5a6b7f'
             const isInstalled = prov.cli_command === 'claude' ? claudeInstalled : openclaudeInstalled
             const isActive = prov.is_active && activeProvider === prov.id
+            const readiness = providerReadiness(prov)
+            const isPrimaryRoute = primaryRoutingProvider?.id === prov.id
+            const cooldownLabel = formatCooldown(prov.cooldown_until)
 
             return (
               <div key={prov.id}
@@ -533,9 +633,28 @@ export default function Providers() {
                           not installed
                         </span>
                       )}
+                      {isPrimaryRoute && !prov.coming_soon && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#071b15] text-[#7fffd4] border border-[#123227] shrink-0">
+                          primary
+                        </span>
+                      )}
+                      {prov.priority_index !== null && prov.priority_index > 0 && !prov.coming_soon && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#101926] text-[#9fb3c8] border border-[#2e3a4a] shrink-0">
+                          fallback #{prov.priority_index}
+                        </span>
+                      )}
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded border shrink-0 ${
+                        readiness.tone === 'success'
+                          ? 'bg-[#071b15] text-[#7fffd4] border-[#123227]'
+                          : readiness.tone === 'danger'
+                            ? 'bg-[#1a0a0a] text-[#f87171] border-[#3a1515]'
+                            : 'bg-[#101926] text-[#9fb3c8] border-[#2e3a4a]'
+                      }`}>
+                        {readiness.label}
+                      </span>
                       {prov.runtime_status !== 'healthy' && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2a1800] text-[#fbbf24] border border-[#4a2b00] shrink-0">
-                          {prov.runtime_reason || prov.runtime_status}
+                          {formatRuntimeReason(prov.runtime_reason, prov.runtime_status)}
                         </span>
                       )}
                     </div>
@@ -582,15 +701,16 @@ export default function Providers() {
                     </button>
 
                     {/* Test */}
-                    <button onClick={() => handleTest(prov.id)} disabled={testing === prov.id}
-                      className="text-[11px] px-3 py-1.5 rounded-md text-[#5a6b7f] border border-[#1e2a3a] hover:text-[#8a9aae] hover:border-[#2e3a4a] transition-colors disabled:opacity-40">
+                    <button onClick={() => handleTest(prov.id)}
+                      className="text-[11px] px-3 py-1.5 rounded-md text-[#5a6b7f] border border-[#1e2a3a] hover:text-[#8a9aae] hover:border-[#2e3a4a] transition-colors disabled:opacity-40"
+                      disabled={testing === prov.id || prov.coming_soon}>
                       {testing === prov.id ? <RefreshCw size={11} className="animate-spin" /> : 'Test'}
                     </button>
 
                     {/* Toggle switch */}
                     <Toggle
                       on={isActive}
-                      disabled={!isInstalled || toggling === prov.id}
+                      disabled={!isInstalled || toggling === prov.id || prov.coming_soon}
                       onChange={(on) => handleToggle(prov.id, on)}
                     />
                   </div>
@@ -615,6 +735,13 @@ export default function Providers() {
                 {prov.runtime_status !== 'healthy' && (
                   <div className="mx-5 mb-3 px-3 py-1.5 rounded bg-[#1a1500] text-[10px] text-[#FBBF24]">
                     Automatic fallback will skip this provider until the cooldown expires or you reset it manually.
+                    {cooldownLabel && <> {cooldownLabel}.</>}
+                  </div>
+                )}
+
+                {prov.coming_soon && (
+                  <div className="mx-5 mb-3 px-3 py-1.5 rounded bg-[#101926] text-[10px] text-[#9fb3c8]">
+                    This provider is listed for roadmap visibility only. It is excluded from live routing, testing, and activation until support is complete.
                   </div>
                 )}
               </div>

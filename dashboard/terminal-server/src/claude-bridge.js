@@ -201,13 +201,14 @@ class ClaudeBridge {
     if (providers[active]) chain.push(active);
     if (providerConfig.fallback_enabled) {
       for (const providerId of order) {
-        if (providers[providerId] && !chain.includes(providerId)) chain.push(providerId);
+        if (providers[providerId] && !providers[providerId].coming_soon && !chain.includes(providerId)) chain.push(providerId);
       }
     }
 
     const candidates = [];
     for (const providerId of chain) {
       const provider = providers[providerId] || {};
+      if (provider.coming_soon) continue;
       if (this._isRuntimeBlocked(runtime[providerId])) continue;
 
       let cliCommand = provider.cli_command || 'claude';

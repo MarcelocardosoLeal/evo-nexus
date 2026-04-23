@@ -283,12 +283,14 @@ def _build_provider_candidates() -> list[tuple[str, str, dict]]:
         chain.append(active)
     if fallback_enabled:
         for provider_id in order:
-            if provider_id not in chain and provider_id in providers:
+            if provider_id not in chain and provider_id in providers and not providers.get(provider_id, {}).get("coming_soon", False):
                 chain.append(provider_id)
 
     candidates = []
     for provider_id in chain:
         provider = providers.get(provider_id, {})
+        if provider.get("coming_soon", False):
+            continue
         runtime_state = runtime.get(provider_id, {})
         if _provider_runtime_blocked(runtime_state):
             continue

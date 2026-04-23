@@ -108,13 +108,15 @@ def _normalize_config(config: dict) -> dict:
     raw_order = config.get("provider_order") or []
     order = []
     for provider_id in raw_order:
-        if provider_id in providers and provider_id not in order:
+        provider = providers.get(provider_id, {})
+        if provider_id in providers and provider_id not in order and not provider.get("coming_soon", False):
             order.append(provider_id)
     for provider_id in DEFAULT_PROVIDER_ORDER:
-        if provider_id in providers and provider_id not in order:
+        provider = providers.get(provider_id, {})
+        if provider_id in providers and provider_id not in order and not provider.get("coming_soon", False):
             order.append(provider_id)
     for provider_id in providers:
-        if provider_id not in order:
+        if provider_id not in order and not providers.get(provider_id, {}).get("coming_soon", False):
             order.append(provider_id)
     config["provider_order"] = order
 
@@ -352,6 +354,7 @@ def list_providers():
             "default_model": prov.get("default_model"),
             "default_base_url": prov.get("default_base_url"),
             "default_region": prov.get("default_region"),
+            "coming_soon": bool(prov.get("coming_soon", False)),
             "priority_index": provider_order.index(key) if key in provider_order else None,
             "runtime_status": runtime.get(key, {}).get("status", "healthy"),
             "runtime_reason": runtime.get(key, {}).get("reason"),
@@ -415,13 +418,13 @@ def update_provider_routing():
     if isinstance(requested_order, list):
         order = []
         for provider_id in requested_order:
-            if provider_id in providers and provider_id not in order:
+            if provider_id in providers and provider_id not in order and not providers.get(provider_id, {}).get("coming_soon", False):
                 order.append(provider_id)
         for provider_id in config.get("provider_order", []):
-            if provider_id in providers and provider_id not in order:
+            if provider_id in providers and provider_id not in order and not providers.get(provider_id, {}).get("coming_soon", False):
                 order.append(provider_id)
         for provider_id in providers:
-            if provider_id not in order:
+            if provider_id not in order and not providers.get(provider_id, {}).get("coming_soon", False):
                 order.append(provider_id)
         config["provider_order"] = order
 

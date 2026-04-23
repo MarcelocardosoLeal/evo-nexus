@@ -48,6 +48,7 @@ It controls:
 - **Provider order** — the fallback priority chain after the currently active provider
 - **Automatic fallback** — when enabled, EvoNexus automatically tries the next provider if the current one fails due to provider-level issues
 - **Auto-return to primary** — workspace preference indicating the system should return to the primary provider once it becomes healthy again
+- **Live eligibility** — providers marked as "coming soon" stay visible on the page, but are excluded from the live routing chain until support is complete
 
 Fallback is designed for operational continuity. It is intended for provider failures such as:
 
@@ -58,6 +59,13 @@ Fallback is designed for operational continuity. It is intended for provider fai
 - transient provider/network unavailability
 
 When one of those conditions is detected, EvoNexus marks that provider as temporarily blocked, skips it for new executions, and moves to the next provider in the routing order. Admins can manually clear that state from the same page with the runtime reset action.
+
+The routing panel now also surfaces operational context directly in the list:
+
+- which provider is the current primary
+- which fallback is expected next
+- whether a provider is `Ready`, `Needs setup`, `OAuth required`, `CLI missing`, or `Coming soon`
+- whether a provider is `Healthy` or temporarily blocked, including cooldown feedback when available
 
 The routing state is shared by:
 
