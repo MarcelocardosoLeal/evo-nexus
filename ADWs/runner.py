@@ -171,6 +171,13 @@ _ALLOWED_ENV_VARS = frozenset({
 })
 
 
+def _sanitize_provider_env_vars(env_vars: dict) -> dict:
+    return {
+        k: v for k, v in env_vars.items()
+        if v and k in _ALLOWED_ENV_VARS
+    }
+
+
 def _read_provider_config() -> dict:
     config_path = WORKSPACE / "config" / "providers.json"
     if not config_path.is_file():
@@ -283,15 +290,12 @@ def _build_provider_candidates() -> list[tuple[str, str, dict]]:
     for provider_id in chain:
         provider = providers.get(provider_id, {})
         runtime_state = runtime.get(provider_id, {})
-        if provider_id != active and _provider_runtime_blocked(runtime_state):
+        if _provider_runtime_blocked(runtime_state):
             continue
         cli = provider.get("cli_command", "claude")
         if cli not in _ALLOWED_CLI_COMMANDS:
             cli = "claude"
-        env_vars = {
-            k: v for k, v in provider.get("env_vars", {}).items()
-            if v and k in _ALLOWED_ENV_VARS
-        }
+        env_vars = _sanitize_provider_env_vars(provider.get("env_vars", {}))
         if not env_vars.get("OPENAI_MODEL"):
             if provider_id == "codex_auth":
                 env_vars["OPENAI_MODEL"] = "codexplan"
@@ -299,8 +303,8 @@ def _build_provider_candidates() -> list[tuple[str, str, dict]]:
                 env_vars["OPENAI_MODEL"] = "gpt-4.1"
         candidates.append((provider_id, cli, env_vars))
 
-    if not candidates:
-        candidates.append(("anthropic", "claude", {}))
+    if not candidates and not _provider_runtime_blocked(runtime.get(active, {})):
+        candidates.append((active or "anthropic", "claude", {}))
     return candidates
 
 
@@ -326,6 +330,9 @@ def run_claude(prompt: str, log_name: str = "unnamed", timeout: int = 600, agent
     start_time = datetime.now()
     candidates = _build_provider_candidates()
     attempted = []
+
+    if not candidates:
+        raise RuntimeError("No available AI providers are currently healthy. Review Providers in the dashboard and reset or reconfigure a blocked provider.")
 
     for index, (provider_id, cli_command, provider_env) in enumerate(candidates):
         attempted.append(provider_id)

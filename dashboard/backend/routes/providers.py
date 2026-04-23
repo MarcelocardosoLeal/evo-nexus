@@ -242,6 +242,26 @@ def _sanitize_env_vars(env_vars: dict) -> dict:
     return safe
 
 
+def _provider_has_config(provider_id: str, env_vars: dict) -> bool:
+    if not env_vars:
+        return True
+
+    optional_vars = {
+        "CLAUDE_CODE_USE_OPENAI",
+        "CLAUDE_CODE_USE_GEMINI",
+        "CLAUDE_CODE_USE_BEDROCK",
+        "CLAUDE_CODE_USE_VERTEX",
+    }
+    if provider_id == "anthropic":
+        optional_vars.add("ANTHROPIC_API_KEY")
+
+    required_values = [
+        value for key, value in env_vars.items()
+        if key not in optional_vars
+    ]
+    return all(value != "" for value in required_values)
+
+
 def _save_codex_auth(tokens: dict):
     """Save tokens to ~/.codex/auth.json in the format OpenClaude/Codex expects.
 
@@ -314,11 +334,7 @@ def list_providers():
                 masked_vars[var_name] = var_value
 
         # Check if provider has required env vars filled
-        has_config = all(
-            v != "" for k, v in env_vars.items()
-            if k not in ("CLAUDE_CODE_USE_OPENAI", "CLAUDE_CODE_USE_GEMINI",
-                         "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX")
-        ) if env_vars else True
+        has_config = _provider_has_config(key, env_vars)
 
         result.append({
             "id": key,

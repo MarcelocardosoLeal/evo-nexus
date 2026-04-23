@@ -16,25 +16,37 @@ class ClaudeBridge {
     this.sessions = new Map();
   }
 
+  _allowedCliCommands() {
+    return new Set(['claude', 'openclaude']);
+  }
+
+  _allowedEnvVars() {
+    return new Set([
+      'ANTHROPIC_API_KEY',
+      'CLAUDE_CODE_USE_OPENAI', 'CLAUDE_CODE_USE_GEMINI',
+      'CLAUDE_CODE_USE_BEDROCK', 'CLAUDE_CODE_USE_VERTEX',
+      'OPENAI_BASE_URL', 'OPENAI_API_KEY', 'OPENAI_MODEL',
+      'CODEX_AUTH_JSON_PATH', 'CODEX_API_KEY',
+      'GEMINI_API_KEY', 'GEMINI_MODEL',
+      'AWS_REGION', 'AWS_BEARER_TOKEN_BEDROCK',
+      'ANTHROPIC_VERTEX_PROJECT_ID', 'CLOUD_ML_REGION',
+    ]);
+  }
+
+  _sanitizeProviderEnvVars(envVars = {}) {
+    const allowedVars = this._allowedEnvVars();
+    return Object.fromEntries(
+      Object.entries(envVars).filter(([k, v]) => v !== '' && allowedVars.has(k))
+    );
+  }
+
   /**
    * Load active provider config from config/providers.json.
    * Returns the CLI command to use and env vars to inject.
    * Only allowlisted CLI commands and env var names are accepted.
    */
   _loadProviderConfig() {
-    const ALLOWED_CLI = new Set(['claude', 'openclaude']);
-    const ALLOWED_VARS = new Set([
-      'ANTHROPIC_API_KEY',
-      'CLAUDE_CODE_USE_OPENAI', 'CLAUDE_CODE_USE_GEMINI',
-      'CLAUDE_CODE_USE_BEDROCK', 'CLAUDE_CODE_USE_VERTEX',
-      'OPENAI_BASE_URL', 'OPENAI_API_KEY', 'OPENAI_MODEL',
-      // Codex OAuth support (OpenClaude 0.3+ reads ~/.codex/auth.json
-      // automatically, but these allow overriding the path or token)
-      'CODEX_AUTH_JSON_PATH', 'CODEX_API_KEY',
-      'GEMINI_API_KEY', 'GEMINI_MODEL',
-      'AWS_REGION', 'AWS_BEARER_TOKEN_BEDROCK',
-      'ANTHROPIC_VERTEX_PROJECT_ID', 'CLOUD_ML_REGION',
-    ]);
+    const ALLOWED_CLI = this._allowedCliCommands();
 
     try {
       // Resolve config relative to this file (src/ → terminal-server/ → dashboard/ → root)
@@ -54,11 +66,7 @@ class ClaudeBridge {
         cliCommand = 'claude';
       }
 
-      const envVars = Object.fromEntries(
-        Object.entries(provider.env_vars || {}).filter(
-          ([k, v]) => v !== '' && ALLOWED_VARS.has(k)
-        )
-      );
+      const envVars = this._sanitizeProviderEnvVars(provider.env_vars || {});
 
       // Provider isolation — the active_provider in providers.json is the
       // user's explicit choice between API-key mode ('openai') and OAuth
@@ -200,13 +208,11 @@ class ClaudeBridge {
     const candidates = [];
     for (const providerId of chain) {
       const provider = providers[providerId] || {};
-      if (providerId !== active && this._isRuntimeBlocked(runtime[providerId])) continue;
+      if (this._isRuntimeBlocked(runtime[providerId])) continue;
 
       let cliCommand = provider.cli_command || 'claude';
-      if (!['claude', 'openclaude'].includes(cliCommand)) cliCommand = 'claude';
-      const envVars = Object.fromEntries(
-        Object.entries(provider.env_vars || {}).filter(([k, v]) => v !== '')
-      );
+      if (!this._allowedCliCommands().has(cliCommand)) cliCommand = 'claude';
+      const envVars = this._sanitizeProviderEnvVars(provider.env_vars || {});
 
       if (!envVars.OPENAI_MODEL) {
         if (providerId === 'codex_auth') envVars.OPENAI_MODEL = 'codexplan';
@@ -216,7 +222,7 @@ class ClaudeBridge {
       candidates.push({ id: providerId, cli_command: cliCommand, env_vars: envVars });
     }
 
-    if (candidates.length === 0) {
+    if (candidates.length === 0 && !this._isRuntimeBlocked(runtime[active])) {
       candidates.push({ id: active || 'anthropic', cli_command: 'claude', env_vars: {} });
     }
     return candidates;
@@ -312,6 +318,13 @@ class ClaudeBridge {
       // Block session if no provider is active
       if (!providerConfig.active || providerConfig.active === 'none') {
         const msg = '\r\n\x1b[1;33mNo AI provider is active.\x1b[0m\r\nGo to \x1b[1;32mProviders\x1b[0m in the dashboard to configure and activate a provider.\r\n';
+        if (onOutput) onOutput(msg);
+        if (onExit) onExit(1, null);
+        return;
+      }
+
+      if (providerCandidates.length === 0) {
+        const msg = '\r\n\x1b[1;33mNo AI providers are currently healthy.\x1b[0m\r\nReview \x1b[1;32mProviders\x1b[0m in the dashboard and reset or reconfigure a blocked provider.\r\n';
         if (onOutput) onOutput(msg);
         if (onExit) onExit(1, null);
         return;
