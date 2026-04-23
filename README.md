@@ -46,6 +46,7 @@ It turns a single CLI installation into a team of **38 specialized agents** orga
 ## Key Features
 
 - **Multi-Provider** — runs on Anthropic (native `claude`) or any of 6 alternate backends via [OpenClaude](https://www.npmjs.com/package/@gitlawb/openclaude): OpenRouter (200+ models), OpenAI, Google Gemini, Codex Auth, AWS Bedrock, Google Vertex AI. Switch providers from the dashboard, no code changes
+- **Provider Routing + Failover** — admins can define provider order, enable automatic fallback, and keep sessions/routines running when a provider hits credit exhaustion, usage-window limits, auth failures, or transient outages
 - **17 Core Agents + Custom** — Ops, Finance, Projects, Community, Social, Strategy, Sales, Courses, Learning Retention, Personal, Knowledge, Marketing, HR, Customer Success, Legal, Product, Data — plus user-created `custom-*` agents (gitignored)
 - **150+ Skills + Custom** — organized by domain prefix (`social-`, `fin-`, `int-`, `prod-`, `mkt-`, `gog-`, `obs-`, `discord-`, `pulse-`, `sage-`, `hr-`, `legal-`, `ops-`, `cs-`, `data-`, `pm-`). Includes `prod-activation-plan` — the canonical skill for producing phased activation plans (index + folder-per-phase + file-per-item) used by Oracle
 - **7 Core + 20 Custom Routines** — daily, weekly, and monthly ADWs managed by a scheduler (core routines ship with the repo; custom routines are user-created and gitignored)

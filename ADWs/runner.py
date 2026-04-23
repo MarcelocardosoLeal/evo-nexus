@@ -125,6 +125,14 @@ def _log_to_file(log_name, prompt, stdout, stderr, returncode, duration, usage=N
 
 
 _ALLOWED_CLI_COMMANDS = frozenset({"claude", "openclaude"})
+_DEFAULT_PROVIDER_ORDER = ["anthropic", "codex_auth", "openrouter", "openai", "gemini", "bedrock", "vertex"]
+_PROVIDER_ERROR_PATTERNS = [
+    ("credit_exhausted", ["credit balance is too low", "insufficient credits", "quota exceeded"]),
+    ("usage_window_exhausted", ["usage limit reached", "try again in", "5 hours", "hours remaining"]),
+    ("rate_limited", ["rate limit", "too many requests", "429"]),
+    ("auth_invalid", ["invalid api key", "authentication failed", "unauthorized", "forbidden"]),
+    ("provider_unreachable", ["connection error", "network error", "temporarily unavailable", "timed out"]),
+]
 
 
 def _spawn_cli(cli_command: str, prompt: str, agent: str | None, provider_env: dict) -> subprocess.Popen:
@@ -153,6 +161,7 @@ def _spawn_cli(cli_command: str, prompt: str, agent: str | None, provider_env: d
     else:
         return subprocess.Popen(["claude"] + base_args, **popen_kwargs)  # noqa: S603
 _ALLOWED_ENV_VARS = frozenset({
+    "ANTHROPIC_API_KEY",
     "CLAUDE_CODE_USE_OPENAI", "CLAUDE_CODE_USE_GEMINI", "CLAUDE_CODE_USE_BEDROCK",
     "CLAUDE_CODE_USE_VERTEX", "OPENAI_BASE_URL", "OPENAI_API_KEY", "OPENAI_MODEL",
     # Codex OAuth support (OpenClaude 0.3+ auto-reads ~/.codex/auth.json)
@@ -162,20 +171,120 @@ _ALLOWED_ENV_VARS = frozenset({
 })
 
 
-def _get_provider_config() -> tuple[str, dict]:
-    """Read active provider CLI command and env vars from config/providers.json.
-
-    Only allowlisted CLI commands and env var names are returned.
-    For OpenAI-based providers, injects a sensible default OPENAI_MODEL when
-    missing — 'codexplan' for Codex OAuth, 'gpt-4.1' for plain API key mode.
-    """
+def _read_provider_config() -> dict:
     config_path = WORKSPACE / "config" / "providers.json"
     if not config_path.is_file():
-        return "claude", {}
+        return {
+            "active_provider": "anthropic",
+            "providers": {},
+            "provider_order": [],
+            "fallback_enabled": True,
+            "auto_return_to_primary": True,
+            "provider_runtime": {},
+        }
     try:
         config = json.loads(config_path.read_text(encoding="utf-8"))
-        active = config.get("active_provider", "anthropic")
-        provider = config.get("providers", {}).get(active, {})
+        providers = config.get("providers", {}) or {}
+        order = []
+        for provider_id in config.get("provider_order", []) or []:
+            if provider_id in providers and provider_id not in order:
+                order.append(provider_id)
+        for provider_id in _DEFAULT_PROVIDER_ORDER:
+            if provider_id in providers and provider_id not in order:
+                order.append(provider_id)
+        for provider_id in providers:
+            if provider_id not in order:
+                order.append(provider_id)
+        return {
+            "active_provider": config.get("active_provider", "anthropic"),
+            "providers": providers,
+            "provider_order": order,
+            "fallback_enabled": bool(config.get("fallback_enabled", True)),
+            "auto_return_to_primary": bool(config.get("auto_return_to_primary", True)),
+            "provider_runtime": config.get("provider_runtime", {}) or {},
+        }
+    except (json.JSONDecodeError, OSError):
+        return {
+            "active_provider": "anthropic",
+            "providers": {},
+            "provider_order": [],
+            "fallback_enabled": True,
+            "auto_return_to_primary": True,
+            "provider_runtime": {},
+        }
+
+
+def _write_provider_config(config: dict):
+    config_path = WORKSPACE / "config" / "providers.json"
+    config_path.write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def _provider_runtime_blocked(runtime_state: dict | None) -> bool:
+    if not runtime_state:
+        return False
+    if runtime_state.get("status") == "healthy":
+        return False
+    cooldown_until = runtime_state.get("cooldown_until")
+    if cooldown_until is None:
+        return runtime_state.get("status") == "blocked"
+    try:
+        return int(cooldown_until) > int(datetime.now().timestamp())
+    except (TypeError, ValueError):
+        return runtime_state.get("status") == "blocked"
+
+
+def _classify_provider_failure(stdout: str, stderr: str) -> str | None:
+    haystack = f"{stdout}\n{stderr}".lower()
+    for reason, patterns in _PROVIDER_ERROR_PATTERNS:
+        if any(pattern in haystack for pattern in patterns):
+            return reason
+    return None
+
+
+def _mark_provider_runtime(provider_id: str, status: str, reason: str | None = None):
+    config = _read_provider_config()
+    runtime = config.setdefault("provider_runtime", {})
+    if status == "healthy":
+        runtime[provider_id] = {
+            "status": "healthy",
+            "reason": None,
+            "cooldown_until": None,
+            "last_failure_at": None,
+        }
+    else:
+        cooldown_seconds = 6 * 3600 if reason in {"credit_exhausted", "usage_window_exhausted"} else 15 * 60
+        runtime[provider_id] = {
+            "status": "blocked",
+            "reason": reason or "unknown",
+            "cooldown_until": int(datetime.now().timestamp()) + cooldown_seconds,
+            "last_failure_at": int(datetime.now().timestamp()),
+        }
+    _write_provider_config(config)
+
+
+def _build_provider_candidates() -> list[tuple[str, str, dict]]:
+    """Return ordered providers (id, cli, env) honoring active provider, order, and runtime state."""
+    config = _read_provider_config()
+    providers = config.get("providers", {})
+    active = config.get("active_provider", "anthropic")
+    order = config.get("provider_order", [])
+    fallback_enabled = config.get("fallback_enabled", True)
+    runtime = config.get("provider_runtime", {})
+
+    chain = []
+    if active in providers:
+        chain.append(active)
+    if fallback_enabled:
+        for provider_id in order:
+            if provider_id not in chain and provider_id in providers:
+                chain.append(provider_id)
+
+    candidates = []
+    for provider_id in chain:
+        provider = providers.get(provider_id, {})
+        runtime_state = runtime.get(provider_id, {})
+        if provider_id != active and _provider_runtime_blocked(runtime_state):
+            continue
         cli = provider.get("cli_command", "claude")
         if cli not in _ALLOWED_CLI_COMMANDS:
             cli = "claude"
@@ -183,16 +292,16 @@ def _get_provider_config() -> tuple[str, dict]:
             k: v for k, v in provider.get("env_vars", {}).items()
             if v and k in _ALLOWED_ENV_VARS
         }
-        # Codex OAuth: OpenClaude expects 'codexplan' / 'codexspark' aliases
-        # to route to the Codex backend. A raw gpt-5.x string bypasses Codex.
         if not env_vars.get("OPENAI_MODEL"):
-            if active == "codex_auth":
+            if provider_id == "codex_auth":
                 env_vars["OPENAI_MODEL"] = "codexplan"
-            elif active == "openai":
+            elif provider_id == "openai":
                 env_vars["OPENAI_MODEL"] = "gpt-4.1"
-        return cli, env_vars
-    except (json.JSONDecodeError, OSError):
-        return "claude", {}
+        candidates.append((provider_id, cli, env_vars))
+
+    if not candidates:
+        candidates.append(("anthropic", "claude", {}))
+    return candidates
 
 
 def run_claude(prompt: str, log_name: str = "unnamed", timeout: int = 600, agent: str = None) -> dict:
@@ -208,87 +317,114 @@ def run_claude(prompt: str, log_name: str = "unnamed", timeout: int = 600, agent
         timeout: Timeout in seconds
         agent: Agent name (.claude/agents/*.md) — if None, runs without agent
     """
-    cli_command, provider_env = _get_provider_config()
-
     if agent:
         agent_label = f"@{agent}"
     else:
         agent_label = ""
-    provider_label = f"[{cli_command}]" if cli_command != "claude" else ""
-    console.print(f"  [step]▶[/step] {log_name} [dim]{agent_label} {provider_label}[/dim]", end="")
+    console.print(f"  [step]▶[/step] {log_name} [dim]{agent_label}[/dim]", end="")
 
     start_time = datetime.now()
+    candidates = _build_provider_candidates()
+    attempted = []
 
-    try:
-        process = _spawn_cli(cli_command, prompt, agent, provider_env)
-
-        stdout_lines = []
-        line_count = 0
-
-        for line in process.stdout:
-            stdout_lines.append(line)
-            line_count += 1
-
-        process.wait(timeout=timeout)
-
-        stderr = process.stderr.read() if process.stderr else ""
-        stdout = "".join(stdout_lines)
-        duration = (datetime.now() - start_time).total_seconds()
-
-        # Parse JSON output to extract result and usage
-        usage = None
-        result_text = stdout
-        try:
-            json_result = json.loads(stdout)
-            usage = _parse_usage(json_result)
-            result_text = json_result.get("result", stdout)
-        except (json.JSONDecodeError, TypeError):
-            pass
-
-        full_prompt = f"[agent:{agent}] {prompt}" if agent else prompt
-        _log_to_file(log_name, full_prompt, result_text, stderr, process.returncode, duration, usage)
-        _save_metrics(log_name, duration, process.returncode, agent, result_text, usage)
-
-        if process.returncode == 0:
-            cost_str = ""
-            if usage:
-                tokens_total = usage["input_tokens"] + usage["output_tokens"]
-                cost_str = f" | {tokens_total:,}tok | ${usage['cost_usd']:.2f}"
-            console.print(f"\r  [success]✓[/success] {log_name} [dim]({duration:.0f}s{cost_str})[/dim]")
+    for index, (provider_id, cli_command, provider_env) in enumerate(candidates):
+        attempted.append(provider_id)
+        provider_label = f"[{provider_id}/{cli_command}]"
+        if index == 0:
+            console.print(f"\r  [step]▶[/step] {log_name} [dim]{agent_label} {provider_label}[/dim]", end="")
         else:
-            console.print(f"\r  [error]✗[/error] {log_name} [dim](exit {process.returncode}, {duration:.0f}s)[/dim]")
+            console.print(f"\n  [warning]↺[/warning] {log_name} [dim]fallback -> {provider_label}[/dim]")
+
+        try:
+            process = _spawn_cli(cli_command, prompt, agent, provider_env)
+
+            stdout_lines = []
+
+            for line in process.stdout:
+                stdout_lines.append(line)
+
+            process.wait(timeout=timeout)
+
+            stderr = process.stderr.read() if process.stderr else ""
+            stdout = "".join(stdout_lines)
+            duration = (datetime.now() - start_time).total_seconds()
+
+            # Parse JSON output to extract result and usage
+            usage = None
+            result_text = stdout
+            try:
+                json_result = json.loads(stdout)
+                usage = _parse_usage(json_result)
+                result_text = json_result.get("result", stdout)
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+            full_prompt = f"[agent:{agent}] {prompt}" if agent else prompt
+            _log_to_file(log_name, full_prompt, result_text, stderr, process.returncode, duration, usage)
+
+            if process.returncode == 0:
+                _mark_provider_runtime(provider_id, "healthy")
+                _save_metrics(log_name, duration, process.returncode, agent, result_text, usage)
+                cost_str = ""
+                if usage:
+                    tokens_total = usage["input_tokens"] + usage["output_tokens"]
+                    cost_str = f" | {tokens_total:,}tok | ${usage['cost_usd']:.2f}"
+                console.print(f"\r  [success]✓[/success] {log_name} [dim]({duration:.0f}s{cost_str} | {provider_id})[/dim]")
+                return {
+                    "success": True,
+                    "stdout": result_text,
+                    "stderr": stderr,
+                    "returncode": process.returncode,
+                    "duration": duration,
+                    "usage": usage,
+                    "provider_id": provider_id,
+                    "attempted_providers": attempted,
+                }
+
+            failure_reason = _classify_provider_failure(result_text, stderr)
+            if failure_reason and index < len(candidates) - 1:
+                _mark_provider_runtime(provider_id, "blocked", failure_reason)
+                console.print(f"\n    [warning]Provider {provider_id} blocked ({failure_reason}); trying next fallback[/warning]")
+                continue
+
+            _save_metrics(log_name, duration, process.returncode, agent, result_text, usage)
+            console.print(f"\r  [error]✗[/error] {log_name} [dim](exit {process.returncode}, {duration:.0f}s | {provider_id})[/dim]")
             if stderr:
                 for err_line in stderr.strip().splitlines()[:3]:
                     console.print(f"    [error]{err_line}[/error]")
+            return {
+                "success": False,
+                "stdout": result_text,
+                "stderr": stderr,
+                "returncode": process.returncode,
+                "duration": duration,
+                "usage": usage,
+                "provider_id": provider_id,
+                "attempted_providers": attempted,
+            }
 
-        return {
-            "success": process.returncode == 0,
-            "stdout": result_text,
-            "stderr": stderr,
-            "returncode": process.returncode,
-            "duration": duration,
-            "usage": usage,
-        }
+        except subprocess.TimeoutExpired:
+            process.kill()
+            duration = (datetime.now() - start_time).total_seconds()
+            console.print(f"\r  [error]✗[/error] {log_name} [warning](timeout {timeout}s | {provider_id})[/warning]")
+            _log_to_file(log_name, prompt, "", f"Timeout after {timeout}s", -1, duration)
+            return {"success": False, "stdout": "", "stderr": f"Timeout after {timeout}s", "returncode": -1, "duration": duration, "provider_id": provider_id, "attempted_providers": attempted}
 
-    except subprocess.TimeoutExpired:
-        process.kill()
-        duration = (datetime.now() - start_time).total_seconds()
-        console.print(f"\r  [error]✗[/error] {log_name} [warning](timeout {timeout}s)[/warning]")
-        _log_to_file(log_name, prompt, "", f"Timeout after {timeout}s", -1, duration)
-        return {"success": False, "stdout": "", "stderr": f"Timeout after {timeout}s", "returncode": -1, "duration": duration}
+        except KeyboardInterrupt:
+            process.kill()
+            duration = (datetime.now() - start_time).total_seconds()
+            console.print(f"\n  [warning]⚠ Cancelled by user[/warning]")
+            _log_to_file(log_name, prompt, "", "Cancelled by user", -2, duration)
+            raise
 
-    except KeyboardInterrupt:
-        process.kill()
-        duration = (datetime.now() - start_time).total_seconds()
-        console.print(f"\n  [warning]⚠ Cancelled by user[/warning]")
-        _log_to_file(log_name, prompt, "", "Cancelled by user", -2, duration)
-        raise
+        except Exception as e:
+            duration = (datetime.now() - start_time).total_seconds()
+            console.print(f"\r  [error]✗[/error] {log_name} [error]({e})[/error]")
+            _log_to_file(log_name, prompt, "", str(e), -3, duration)
+            return {"success": False, "stdout": "", "stderr": str(e), "returncode": -3, "duration": duration, "provider_id": provider_id, "attempted_providers": attempted}
 
-    except Exception as e:
-        duration = (datetime.now() - start_time).total_seconds()
-        console.print(f"\r  [error]✗[/error] {log_name} [error]({e})[/error]")
-        _log_to_file(log_name, prompt, "", str(e), -3, duration)
-        return {"success": False, "stdout": "", "stderr": str(e), "returncode": -3, "duration": duration}
+    duration = (datetime.now() - start_time).total_seconds()
+    return {"success": False, "stdout": "", "stderr": "No provider candidates available", "returncode": -4, "duration": duration, "attempted_providers": attempted}
 
 
 def run_skill(

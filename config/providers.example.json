@@ -1,11 +1,25 @@
 {
   "active_provider": "anthropic",
+  "provider_order": [
+    "anthropic",
+    "codex_auth",
+    "openrouter",
+    "openai",
+    "gemini",
+    "bedrock",
+    "vertex"
+  ],
+  "fallback_enabled": true,
+  "auto_return_to_primary": true,
+  "provider_runtime": {},
   "providers": {
     "anthropic": {
       "name": "Anthropic (Claude nativo)",
       "description": "Claude Code oficial via Anthropic API",
       "cli_command": "claude",
-      "env_vars": {},
+      "env_vars": {
+        "ANTHROPIC_API_KEY": ""
+      },
       "requires_logout": false
     },
     "openrouter": {

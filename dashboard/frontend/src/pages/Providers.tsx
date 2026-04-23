@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CheckCircle2, AlertCircle, RefreshCw, X } from 'lucide-react'
+import { CheckCircle2, AlertCircle, RefreshCw, X, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react'
 import { api } from '../lib/api'
 import { useTranslation } from 'react-i18next'
 
@@ -11,11 +11,18 @@ interface Provider {
   has_config: boolean; env_vars: ProviderEnvVars; requires_logout: boolean
   setup_hint: string | null; default_model: string | null
   default_base_url: string | null; default_region: string | null
+  priority_index: number | null
+  runtime_status: string
+  runtime_reason: string | null
+  cooldown_until: number | null
 }
 
 interface ProvidersResponse {
   providers: Provider[]; active_provider: string
   claude_installed: boolean; openclaude_installed: boolean
+  provider_order: string[]
+  fallback_enabled: boolean
+  auto_return_to_primary: boolean
 }
 
 const ENV_VAR_LABELS: Record<string, string> = {
@@ -195,6 +202,11 @@ export default function Providers() {
   const [deviceCode, setDeviceCode] = useState<{ user_code: string; verification_url: string; interval: number; expires_in: number } | null>(null)
   const [devicePolling, setDevicePolling] = useState(false)
   const [toggling, setToggling] = useState<string | null>(null)
+  const [providerOrder, setProviderOrder] = useState<string[]>([])
+  const [fallbackEnabled, setFallbackEnabled] = useState(true)
+  const [autoReturnToPrimary, setAutoReturnToPrimary] = useState(true)
+  const [routingSaving, setRoutingSaving] = useState(false)
+  const [resettingRuntime, setResettingRuntime] = useState<string | null>(null)
 
   // Dynamic model discovery — populated when Configure modal opens for
   // openai/codex_auth. Shape: { [providerId]: { loading, models[], error? } }
@@ -214,6 +226,9 @@ export default function Providers() {
       setActiveProvider(data.active_provider || 'none')
       setClaudeInstalled(data.claude_installed)
       setOpenclaudeInstalled(data.openclaude_installed)
+      setProviderOrder(data.provider_order || [])
+      setFallbackEnabled(data.fallback_enabled ?? true)
+      setAutoReturnToPrimary(data.auto_return_to_primary ?? true)
     }).catch(() => setProviders([])).finally(() => setLoading(false))
   }
 
@@ -232,6 +247,42 @@ export default function Providers() {
       load()
     } catch (e) { console.error(e) }
     finally { setToggling(null) }
+  }
+
+  const moveProvider = (providerId: string, direction: -1 | 1) => {
+    setProviderOrder(prev => {
+      const idx = prev.indexOf(providerId)
+      const nextIdx = idx + direction
+      if (idx === -1 || nextIdx < 0 || nextIdx >= prev.length) return prev
+      const copy = [...prev]
+      const [item] = copy.splice(idx, 1)
+      copy.splice(nextIdx, 0, item)
+      return copy
+    })
+  }
+
+  const handleSaveRouting = async () => {
+    setRoutingSaving(true)
+    try {
+      await api.post('/providers/routing', {
+        provider_order: providerOrder,
+        fallback_enabled: fallbackEnabled,
+        auto_return_to_primary: autoReturnToPrimary,
+      })
+      load()
+    } finally {
+      setRoutingSaving(false)
+    }
+  }
+
+  const handleResetRuntime = async (providerId: string) => {
+    setResettingRuntime(providerId)
+    try {
+      await api.post(`/providers/${providerId}/runtime/reset`)
+      load()
+    } finally {
+      setResettingRuntime(null)
+    }
   }
 
   const openConfig = (prov: Provider) => {
@@ -352,6 +403,11 @@ export default function Providers() {
 
   const configuredCount = providers.filter(p => p.has_config && p.installed).length
   const hasActive = activeProvider !== 'none' && providers.some(p => p.id === activeProvider)
+  const providersById = Object.fromEntries(providers.map(p => [p.id, p]))
+  const orderedProviders = [
+    ...providerOrder.filter(id => providersById[id]).map(id => providersById[id]),
+    ...providers.filter(p => !providerOrder.includes(p.id)),
+  ]
 
   const inp = "w-full px-4 py-3 rounded-lg bg-[#0f1520] border border-[#1e2a3a] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[#00FFA7]/60 focus:ring-1 focus:ring-[#00FFA7]/20 font-mono"
   const lbl = "block text-[11px] font-semibold text-[#5a6b7f] mb-1.5 tracking-[0.08em] uppercase"
@@ -387,6 +443,62 @@ export default function Providers() {
         </div>
       )}
 
+      {!loading && (
+        <div className="mb-6 rounded-lg border border-[#152030] bg-[#0b1018] p-4">
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div>
+              <h2 className="text-sm font-semibold text-white">Provider Routing</h2>
+              <p className="text-[11px] text-[#5a6b7f] mt-1">Define a ordem de uso e o fallback automatico quando um provider ficar sem credito, limite ou disponibilidade.</p>
+            </div>
+            <button
+              onClick={handleSaveRouting}
+              disabled={routingSaving}
+              className="text-[11px] px-4 py-2 rounded-md bg-[#00FFA7] text-[#080c14] font-semibold hover:bg-[#00e69a] transition-colors disabled:opacity-40"
+            >
+              {routingSaving ? 'Saving...' : 'Save routing'}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-6 mb-4">
+            <div className="flex items-center gap-2 text-sm text-[#c7d2e0]">
+              <Toggle on={fallbackEnabled} onChange={setFallbackEnabled} />
+              <span>Automatic fallback</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-[#c7d2e0]">
+              <Toggle on={autoReturnToPrimary} onChange={setAutoReturnToPrimary} />
+              <span>Auto-return when primary recovers</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {providerOrder.map((providerId, index) => {
+              const prov = providersById[providerId]
+              if (!prov) return null
+              return (
+                <div key={providerId} className="flex items-center gap-3 rounded-lg border border-[#152030] bg-[#0f1520] px-3 py-2">
+                  <div className="w-7 text-center text-[11px] font-semibold text-[#5a6b7f]">{index + 1}</div>
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PROVIDER_COLORS[prov.id] || '#5a6b7f' }} />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-white">{prov.name}</div>
+                    <div className="text-[11px] text-[#5a6b7f]">
+                      {index === 0 ? 'Primary candidate' : `Fallback #${index}`}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => moveProvider(providerId, -1)} disabled={index === 0} className="p-1.5 rounded border border-[#1e2a3a] text-[#5a6b7f] hover:text-white disabled:opacity-30">
+                      <ArrowUp size={12} />
+                    </button>
+                    <button onClick={() => moveProvider(providerId, 1)} disabled={index === providerOrder.length - 1} className="p-1.5 rounded border border-[#1e2a3a] text-[#5a6b7f] hover:text-white disabled:opacity-30">
+                      <ArrowDown size={12} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Provider list */}
       {loading ? (
         <div className="space-y-3">
@@ -394,7 +506,7 @@ export default function Providers() {
         </div>
       ) : (
         <div className="space-y-2">
-          {providers.map((prov) => {
+          {orderedProviders.map((prov) => {
             const color = PROVIDER_COLORS[prov.id] || '#5a6b7f'
             const isInstalled = prov.cli_command === 'claude' ? claudeInstalled : openclaudeInstalled
             const isActive = prov.is_active && activeProvider === prov.id
@@ -421,6 +533,11 @@ export default function Providers() {
                           not installed
                         </span>
                       )}
+                      {prov.runtime_status !== 'healthy' && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2a1800] text-[#fbbf24] border border-[#4a2b00] shrink-0">
+                          {prov.runtime_reason || prov.runtime_status}
+                        </span>
+                      )}
                     </div>
                     <p className="text-[11px] text-[#3d4f65] mt-0.5 truncate">{prov.description}</p>
                   </div>
@@ -445,6 +562,16 @@ export default function Providers() {
                       <button onClick={handleOpenAILogout}
                         className="text-[11px] px-2 py-1 rounded-md text-[#f87171] hover:bg-[#1a0a0a] transition-colors">
                         Logout
+                      </button>
+                    )}
+
+                    {prov.runtime_status !== 'healthy' && (
+                      <button
+                        onClick={() => handleResetRuntime(prov.id)}
+                        disabled={resettingRuntime === prov.id}
+                        className="text-[11px] px-2 py-1 rounded-md text-[#FBBF24] border border-[#4a2b00] hover:bg-[#2a1800] transition-colors disabled:opacity-40"
+                      >
+                        {resettingRuntime === prov.id ? <RefreshCw size={11} className="animate-spin" /> : <RotateCcw size={11} />}
                       </button>
                     )}
 
@@ -482,6 +609,12 @@ export default function Providers() {
                 {prov.requires_logout && isActive && (
                   <div className="mx-5 mb-3 px-3 py-1.5 rounded bg-[#1a1500] text-[10px] text-[#FBBF24]">
                     Run /logout in Claude Code if you were previously logged into Anthropic
+                  </div>
+                )}
+
+                {prov.runtime_status !== 'healthy' && (
+                  <div className="mx-5 mb-3 px-3 py-1.5 rounded bg-[#1a1500] text-[10px] text-[#FBBF24]">
+                    Automatic fallback will skip this provider until the cooldown expires or you reset it manually.
                   </div>
                 )}
               </div>

@@ -21,7 +21,7 @@
 # ---- Stage 1: Frontend build ---------------------------------------------
 FROM node:22-alpine AS frontend-build
 WORKDIR /frontend
-COPY dashboard/frontend/package.json dashboard/frontend/package-lock.json* ./
+COPY dashboard/frontend/package.json dashboard/frontend/package-lock.json* dashboard/frontend/.npmrc ./
 RUN npm install
 COPY dashboard/frontend/ ./
 RUN npm run build
@@ -97,11 +97,13 @@ RUN mkdir -p /workspace/_defaults/config \
 
 # Bootstrap wrapper (config volume + source .env + wait-for-key)
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh
 
 # Multi-process supervisor (Flask on :8080 + terminal-server on :32352)
 COPY start-dashboard.sh /usr/local/bin/start-dashboard.sh
-RUN chmod +x /usr/local/bin/start-dashboard.sh
+RUN sed -i 's/\r$//' /usr/local/bin/start-dashboard.sh \
+    && chmod +x /usr/local/bin/start-dashboard.sh
 
 # OCI metadata
 LABEL org.opencontainers.image.title="evo-nexus-dashboard" \

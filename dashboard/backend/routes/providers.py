@@ -36,6 +36,7 @@ ALLOWED_CLI_COMMANDS = frozenset({"claude", "openclaude"})
 
 # Allowlisted env var names — only these can be injected into subprocess
 ALLOWED_ENV_VARS = frozenset({
+    "ANTHROPIC_API_KEY",
     "CLAUDE_CODE_USE_OPENAI",
     "CLAUDE_CODE_USE_GEMINI",
     "CLAUDE_CODE_USE_BEDROCK",
@@ -55,6 +56,26 @@ ALLOWED_ENV_VARS = frozenset({
     "CLOUD_ML_REGION",
 })
 
+DEFAULT_PROVIDER_ORDER = [
+    "anthropic",
+    "codex_auth",
+    "openrouter",
+    "openai",
+    "gemini",
+    "bedrock",
+    "vertex",
+]
+
+RUNTIME_REASONS = frozenset({
+    "credit_exhausted",
+    "usage_window_exhausted",
+    "rate_limited",
+    "provider_unreachable",
+    "auth_invalid",
+    "manual_block",
+    "unknown",
+})
+
 
 def _read_config() -> dict:
     """Read providers.json. If missing, copy from providers.example.json."""
@@ -65,19 +86,109 @@ def _read_config() -> dict:
                 import shutil as _shutil
                 _shutil.copy2(example, PROVIDERS_CONFIG)
         if PROVIDERS_CONFIG.is_file():
-            return json.loads(PROVIDERS_CONFIG.read_text(encoding="utf-8"))
+            return _normalize_config(json.loads(PROVIDERS_CONFIG.read_text(encoding="utf-8")))
     except (json.JSONDecodeError, OSError):
         pass
-    return {"active_provider": "anthropic", "providers": {}}
+    return _normalize_config({"active_provider": "anthropic", "providers": {}})
 
 
 def _write_config(config: dict):
     """Write providers.json."""
+    config = _normalize_config(config)
     PROVIDERS_CONFIG.parent.mkdir(parents=True, exist_ok=True)
     PROVIDERS_CONFIG.write_text(
         json.dumps(config, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
+
+
+def _normalize_config(config: dict) -> dict:
+    providers = config.get("providers", {}) or {}
+
+    raw_order = config.get("provider_order") or []
+    order = []
+    for provider_id in raw_order:
+        if provider_id in providers and provider_id not in order:
+            order.append(provider_id)
+    for provider_id in DEFAULT_PROVIDER_ORDER:
+        if provider_id in providers and provider_id not in order:
+            order.append(provider_id)
+    for provider_id in providers:
+        if provider_id not in order:
+            order.append(provider_id)
+    config["provider_order"] = order
+
+    active = config.get("active_provider", "anthropic")
+    if active != "none" and active not in providers:
+        config["active_provider"] = order[0] if order else "none"
+    else:
+        config["active_provider"] = active
+
+    config["fallback_enabled"] = bool(config.get("fallback_enabled", True))
+    config["auto_return_to_primary"] = bool(config.get("auto_return_to_primary", True))
+
+    runtime = config.get("provider_runtime")
+    if not isinstance(runtime, dict):
+        runtime = {}
+
+    cleaned_runtime = {}
+    for provider_id, state in runtime.items():
+        if provider_id not in providers or not isinstance(state, dict):
+            continue
+        status = state.get("status", "healthy")
+        reason = state.get("reason")
+        cooldown_until = state.get("cooldown_until")
+        last_failure_at = state.get("last_failure_at")
+        if status not in {"healthy", "degraded", "blocked"}:
+            status = "healthy"
+        if reason not in RUNTIME_REASONS:
+            reason = None
+        cleaned_runtime[provider_id] = {
+            "status": status,
+            "reason": reason,
+            "cooldown_until": cooldown_until,
+            "last_failure_at": last_failure_at,
+        }
+    config["provider_runtime"] = cleaned_runtime
+
+    return config
+
+
+def _now_ts() -> int:
+    return int(time.time())
+
+
+def _is_runtime_blocked(state: dict | None) -> bool:
+    if not state:
+        return False
+    if state.get("status") == "healthy":
+        return False
+    cooldown_until = state.get("cooldown_until")
+    if cooldown_until is None:
+        return state.get("status") == "blocked"
+    try:
+        return int(cooldown_until) > _now_ts()
+    except (TypeError, ValueError):
+        return state.get("status") == "blocked"
+
+
+def _set_runtime_state(config: dict, provider_id: str, status: str, reason: str | None = None, cooldown_seconds: int | None = None):
+    runtime = config.setdefault("provider_runtime", {})
+    if status == "healthy":
+        runtime[provider_id] = {
+            "status": "healthy",
+            "reason": None,
+            "cooldown_until": None,
+            "last_failure_at": None,
+        }
+        return
+
+    runtime[provider_id] = {
+        "status": status,
+        "reason": reason if reason in RUNTIME_REASONS else "unknown",
+        "cooldown_until": (_now_ts() + cooldown_seconds) if cooldown_seconds else None,
+        "last_failure_at": _now_ts(),
+    }
 
 
 def _mask_secret(value: str) -> str:
@@ -179,6 +290,8 @@ def list_providers():
     config = _read_config()
     active = config.get("active_provider", "anthropic")
     providers = config.get("providers", {})
+    provider_order = config.get("provider_order", [])
+    runtime = config.get("provider_runtime", {})
 
     # Check CLI installation status for both binaries
     claude_status = _check_cli("claude")
@@ -223,6 +336,10 @@ def list_providers():
             "default_model": prov.get("default_model"),
             "default_base_url": prov.get("default_base_url"),
             "default_region": prov.get("default_region"),
+            "priority_index": provider_order.index(key) if key in provider_order else None,
+            "runtime_status": runtime.get(key, {}).get("status", "healthy"),
+            "runtime_reason": runtime.get(key, {}).get("reason"),
+            "cooldown_until": runtime.get(key, {}).get("cooldown_until"),
         })
 
     return jsonify({
@@ -230,6 +347,9 @@ def list_providers():
         "active_provider": active,
         "claude_installed": claude_status["installed"],
         "openclaude_installed": openclaude_status["installed"],
+        "provider_order": provider_order,
+        "fallback_enabled": config.get("fallback_enabled", True),
+        "auto_return_to_primary": config.get("auto_return_to_primary", True),
     })
 
 
@@ -265,6 +385,42 @@ def set_active_provider():
     _write_config(config)
 
     return jsonify({"status": "ok", "active_provider": provider_id})
+
+
+@bp.route("/api/providers/routing", methods=["POST"])
+@login_required
+def update_provider_routing():
+    """Update provider order and fallback settings."""
+    data = request.get_json(silent=True) or {}
+    config = _read_config()
+    providers = config.get("providers", {})
+
+    requested_order = data.get("provider_order")
+    if isinstance(requested_order, list):
+        order = []
+        for provider_id in requested_order:
+            if provider_id in providers and provider_id not in order:
+                order.append(provider_id)
+        for provider_id in config.get("provider_order", []):
+            if provider_id in providers and provider_id not in order:
+                order.append(provider_id)
+        for provider_id in providers:
+            if provider_id not in order:
+                order.append(provider_id)
+        config["provider_order"] = order
+
+    if "fallback_enabled" in data:
+        config["fallback_enabled"] = bool(data.get("fallback_enabled"))
+    if "auto_return_to_primary" in data:
+        config["auto_return_to_primary"] = bool(data.get("auto_return_to_primary"))
+
+    _write_config(config)
+    return jsonify({
+        "status": "ok",
+        "provider_order": config.get("provider_order", []),
+        "fallback_enabled": config.get("fallback_enabled", True),
+        "auto_return_to_primary": config.get("auto_return_to_primary", True),
+    })
 
 
 @bp.route("/api/providers/<provider_id>/config", methods=["GET"])
@@ -352,12 +508,27 @@ def test_provider(provider_id):
     test_env = {**os.environ, **env_vars}
 
     result = _run_cli_version(cli, env=test_env)
+    if result["installed"]:
+        _set_runtime_state(config, provider_id, "healthy")
+        _write_config(config)
     return jsonify({
         "success": result["installed"],
         "version": result["version"],
         "cli": cli,
         "path": result["path"],
     })
+
+
+@bp.route("/api/providers/<provider_id>/runtime/reset", methods=["POST"])
+@login_required
+def reset_provider_runtime(provider_id):
+    """Clear runtime failure state for a provider."""
+    config = _read_config()
+    if provider_id not in config.get("providers", {}):
+        return jsonify({"error": f"Unknown provider: {provider_id}"}), 400
+    _set_runtime_state(config, provider_id, "healthy")
+    _write_config(config)
+    return jsonify({"status": "ok", "provider_id": provider_id})
 
 
 # ── OpenAI Auth Flow ──────────────────────────────

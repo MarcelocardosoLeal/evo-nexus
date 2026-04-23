@@ -26,6 +26,8 @@ npm install -g @gitlawb/openclaude
 
 The Providers page shows a banner at the top indicating whether `claude` and `openclaude` are installed and in `$PATH`. If `openclaude` is missing, the banner shows the install command.
 
+In this fork, the Anthropic card can also store `ANTHROPIC_API_KEY` directly in `providers.json`, which helps admins switch workspace credentials without depending exclusively on the persisted Claude CLI login state.
+
 ## Activating a Provider
 
 1. Open **System → Providers** in the sidebar
@@ -36,6 +38,33 @@ The Providers page shows a banner at the top indicating whether `claude` and `op
 The active provider is stored in `config/providers.json`. Both the terminal-server and the ADW runner re-read this file on every session spawn, so switching takes effect **immediately** — no restart needed.
 
 A green "Active" badge marks the currently selected provider. Every other provider can still be configured and tested without affecting the active one.
+
+## Provider Routing and Automatic Fallback
+
+The Providers page also exposes a **Provider Routing** panel for admins.
+
+It controls:
+
+- **Provider order** — the fallback priority chain after the currently active provider
+- **Automatic fallback** — when enabled, EvoNexus automatically tries the next provider if the current one fails due to provider-level issues
+- **Auto-return to primary** — workspace preference indicating the system should return to the primary provider once it becomes healthy again
+
+Fallback is designed for operational continuity. It is intended for provider failures such as:
+
+- credits exhausted
+- usage window exhausted
+- rate limiting
+- auth rejected
+- transient provider/network unavailability
+
+When one of those conditions is detected, EvoNexus marks that provider as temporarily blocked, skips it for new executions, and moves to the next provider in the routing order. Admins can manually clear that state from the same page with the runtime reset action.
+
+The routing state is shared by:
+
+- the dashboard terminal sessions
+- ADW routines and jobs executed through `ADWs/runner.py`
+
+This means a provider outage or credit exhaustion does not stop the whole workspace if a fallback provider is already configured.
 
 ## Testing a Provider
 
@@ -61,6 +90,13 @@ When you switch away from Anthropic to any other provider, OpenClaude inherits y
 - `config/providers.json` — active provider + per-provider CLI + env vars (**gitignored**, contains secrets)
 - `config/providers.example.json` — template copied on first boot if no real file exists (checked into git)
 - `.env` — unchanged by this feature. AI provider env vars live in `providers.json`, not `.env`
+
+`providers.json` now also stores routing metadata:
+
+- `provider_order`
+- `fallback_enabled`
+- `auto_return_to_primary`
+- `provider_runtime`
 
 ## Configuring at Install Time
 
